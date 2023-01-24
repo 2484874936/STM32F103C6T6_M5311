@@ -13,12 +13,13 @@ typedef struct Uart
     rt_mailbox_t dma_mb;//DMA接收邮箱
     rt_sem_t rx_sem;//中断接收信号量
     rt_mutex_t tx_mutex;//发送互斥量
-
     rt_size_t (*send)(void *, rt_size_t);//发送函数
     rt_size_t (*recv)(char *, rt_int32_t);//DMA接收函数
     rt_err_t (*input)(rt_device_t, rt_size_t);//接收回调函数
     int (*init)(void);//初始化函数
     int (*data_processing)(char *,rt_size_t);//数据处理函数
+    struct rt_ringbuffer *ringbuffer;
+    rt_int16_t  ringbuffer_size;
 } uart_t;
 
 #define UART_TX_SIZE 256

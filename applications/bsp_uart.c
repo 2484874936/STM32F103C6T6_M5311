@@ -6,7 +6,6 @@
 
 
 #if defined(USING_UART1)
-void uart1_baud_rate_set(void);
 static rt_size_t uart1_send(void *data, rt_size_t size);
 static rt_size_t uart1_recv(char *buffer, rt_int32_t timeout);
 static rt_err_t uart1_callback(rt_device_t dev, rt_size_t size);
@@ -30,7 +29,9 @@ uart_t G_UART_1 = {
 #endif
         uart1_callback,
         uart1_init,
-        uart1_data_processing};
+        uart1_data_processing,
+        RT_NULL,
+        1024};
 
 static rt_size_t uart1_send(void *data, rt_size_t size)
 {
@@ -234,11 +235,13 @@ uart_t G_UART_2 = {
 #if defined(BSP_UART2_RX_USING_DMA)
         uart2_recv,
 #else
-        NULL,
+        RT_NULL,
 #endif
         uart2_callback,
         uart2_init,
-        uart2_data_processing };
+        uart2_data_processing,
+        RT_NULL,
+        1024};
 
 static rt_size_t uart2_send(void *data, rt_size_t size)
 {
@@ -410,6 +413,19 @@ int uart2_init(void)
        rt_kprintf("Create %s uart2_thread failed!\n", UART2_NAME);
        return RT_ERROR;
     }
+    //初始化ringbuffer
+    G_UART_2.ringbuffer = rt_ringbuffer_create(G_UART_2.ringbuffer_size);
+    /* 创建成功则启动线程 */
+    if (G_UART_2.ringbuffer != RT_NULL)
+    {
+        rt_kprintf("Create uart2_ringbuffer failed!\n");
+       return RT_EOK;
+    }
+    else
+    {
+       rt_kprintf("Create uart2_ringbuffer failed!\n");
+       return RT_ERROR;
+    }
 }
 #endif
 
@@ -440,7 +456,9 @@ uart_t G_UART_3 = {
 #endif
         uart3_callback,
         uart3_init,
-        uart3_data_processing};
+        uart3_data_processing,
+        RT_NULL,
+        1024};
 
 static rt_size_t uart3_send(void *data, rt_size_t size)
 {
@@ -644,7 +662,9 @@ uart_t G_UART_4 = {
 #endif
         uart4_callback,
         uart4_init,
-        uart4_data_processing};
+        uart4_data_processing,
+        RT_NULL,
+        1024};
 
 static rt_size_t uart4_send(void *data, rt_size_t size)
 {
@@ -841,7 +861,9 @@ uart_t G_UART_5 = {
         NULL,
         uart5_callback,
         uart5_init,
-        uart5_data_processing};
+        uart5_data_processing,
+        RT_NULL,
+        1024};
 
 static rt_size_t uart5_send(void *data, rt_size_t size)
 {
@@ -1062,7 +1084,7 @@ int uart_init(void)
 #endif
     return RT_EOK;
 }
-INIT_APP_EXPORT(uart_init); /* 使用组件自动初始化机制 */
+//INIT_APP_EXPORT(uart_init); /* 使用组件自动初始化机制 */
 
 
 

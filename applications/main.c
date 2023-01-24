@@ -19,16 +19,15 @@
 int main(void)
 {
 
-//    uart_init();
+    uart_init();
     led_init();
     int count=0;
     easyblink(g_test_led, -1, 100, 500);
     for(;;)
     {
         count++;
-        LOG_D("Hello RT-Thread for %d times!\n",count);
+//        LOG_D("Hello RT-Thread for %d times!\n",count);
         rt_uprintf(G_UART_2,"Hello RT-Thread for %d times!\n",count);
-//        rt_kprintf("Hello RT-Thread for %d times!\n",count);
         rt_thread_mdelay(1000);
     }
 
