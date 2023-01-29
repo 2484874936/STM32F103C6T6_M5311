@@ -1,3 +1,4 @@
 autoUpdatePkgs=true
 eclipse.preferences.version=1
+encoding//applications/bsp_uart.c=GBK
 encoding/<project>=UTF-8

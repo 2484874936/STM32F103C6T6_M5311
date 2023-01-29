@@ -1058,35 +1058,14 @@
     <group>
       <name>User</name>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/c6t6/cubemx/Src/main.c</name>
+        <name>$PROJ_DIR$/../Src/main.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/c6t6/cubemx/Src/stm32f1xx_it.c</name>
+        <name>$PROJ_DIR$/../Src/stm32f1xx_it.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/c6t6/cubemx/Src/stm32f1xx_hal_msp.c</name>
+        <name>$PROJ_DIR$/../Src/stm32f1xx_hal_msp.c</name>
       </file>
-      <group>
-        <name>D:</name>
-        <group>
-          <name>workplace_RT</name>
-          <group>
-            <name>c6t6</name>
-            <group>
-              <name>cubemx</name>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/c6t6/cubemx/Src/main.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/c6t6/cubemx/Src/stm32f1xx_it.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/c6t6/cubemx/Src/stm32f1xx_hal_msp.c</name>
-              </file>
-            </group>
-          </group>
-        </group>
-      </group>
     </group>
   </group>
   <group>

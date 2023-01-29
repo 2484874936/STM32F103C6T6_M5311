@@ -2,21 +2,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
+//#define RT_SERIAL_CONFIG_DEFAULT    \
+//{                                   \
+//    115200,    /* 115200 bits/s */  \
+//    8,          /* 8 databits */    \
+//    0,      /* 1 stopbit */         \
+//    0,      /* No parity  */        \
+//    0,    /* LSB first sent */      \
+//    0,       /* Normal mode */      \
+//    1024, /* Buffer size, "+1" is Prepared to "\0" */ \
+//    0                               \
+//}
+//
+//struct serial_configure
+//{
+//    rt_uint32_t baud_rate;//²¨ÌØÂÊ
+//    rt_uint32_t data_bits :4;//Êı¾İÎ»
+//    rt_uint32_t stop_bits :2;//Í£Ö¹Î»
+//    rt_uint32_t parity :2;//Ğ£ÑéÎ»
+//    rt_uint32_t bit_order :1;
+//    rt_uint32_t invert :1;
+//    rt_uint32_t bufsz :16;
+//    rt_uint32_t reserved :6;
+//};
 
 #if defined(USING_UART1)
+void uart1_baud_rate_set(void);
+
 static rt_size_t uart1_send(void *data, rt_size_t size);
 static rt_size_t uart1_recv(char *buffer, rt_int32_t timeout);
 static rt_err_t uart1_callback(rt_device_t dev, rt_size_t size);
 __WEAK int uart1_data_processing(char *buffer, rt_size_t index);
 static int uart1_init(void);
 
-#if !defined(BSP_UART1_RX_USING_DMA)
-struct rt_completion uart1_completion;
-#endif
 uart_t G_UART_1 = {
-        RT_NULL,
         RT_NULL,
         RT_NULL,
         RT_NULL,
@@ -29,23 +48,11 @@ uart_t G_UART_1 = {
 #endif
         uart1_callback,
         uart1_init,
-        uart1_data_processing,
-        RT_NULL,
-        1024};
+        uart1_data_processing};
 
 static rt_size_t uart1_send(void *data, rt_size_t size)
 {
-    rt_size_t length=0;
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_take(G_UART_1.tx_mutex, RT_WAITING_FOREVER);
-    }
-        length = rt_device_write(G_UART_1.serial, 0, data, size);
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_release(G_UART_1.tx_mutex);
-    }
-    return length;
+    return rt_device_write(G_UART_1.serial, 0, data, size);
 }
 
 
@@ -63,17 +70,15 @@ static rt_size_t uart1_recv(char *buffer, rt_int32_t timeout)
 }
 
 
-/* æ¥æ”¶æ•°æ®å›è°ƒå‡½æ•° */
+/* ½ÓÊÕÊı¾İ»Øµ÷º¯Êı */
 static rt_err_t uart1_callback(rt_device_t dev, rt_size_t size)
 {
 #if defined(BSP_UART1_RX_USING_DMA)
-    /* å‘é€é‚®ä»¶ */
+    /* ·¢ËÍÓÊ¼ş */
     return rt_mb_send(G_UART_1.dma_mb, size);
 #else
-//    /* ä¸²å£æ¥æ”¶åˆ°æ•°æ®åäº§ç”Ÿä¸­æ–­ï¼Œè°ƒç”¨æ­¤å›è°ƒå‡½æ•°ï¼Œç„¶åå‘é€æ¥æ”¶ä¿¡å·é‡ */
-//    return rt_sem_release(G_UART_1.rx_sem);
-    //å‘é€å®Œæˆä¿¡å·é‡
-    rt_completion_done(&uart1_completion);
+    /* ´®¿Ú½ÓÊÕµ½Êı¾İºó²úÉúÖĞ¶Ï£¬µ÷ÓÃ´Ë»Øµ÷º¯Êı£¬È»ºó·¢ËÍ½ÓÊÕĞÅºÅÁ¿ */
+    return rt_sem_release(G_UART_1.rx_sem);
 #endif
 }
 
@@ -82,7 +87,7 @@ __WEAK int uart1_data_processing(char *buffer, rt_size_t index)
 #if defined(BSP_UART1_RX_USING_DMA)
     if(index)
 #else
-    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ä¸­æ–­å¿…é¡»è¦é™åˆ¶æ‰èƒ½è¾“å‡ºå­—ç¬¦ä¸²
+    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ÖĞ¶Ï±ØĞëÒªÏŞÖÆ²ÅÄÜÊä³ö×Ö·û´®
 #endif
     {
         rt_kprintf("usart1 ");
@@ -94,12 +99,10 @@ __WEAK int uart1_data_processing(char *buffer, rt_size_t index)
     return index;
 }
 
-
-
 static void uart1_rev_thread(void *parameter)
 {
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-    //    config.bufsz = 100;//è®¾ç½®æ¥æ”¶ç¼“å†²åŒºå¤§å°,ä¸è®¾ç½®åˆ™é»˜è®¤å¤§å°
+    //    config.bufsz = 100;//ÉèÖÃ½ÓÊÕ»º³åÇø´óĞ¡,²»ÉèÖÃÔòÄ¬ÈÏ´óĞ¡
     char uart1rev[config.bufsz];
     memset(uart1rev,0,config.bufsz);
     rt_size_t len1=0;
@@ -108,21 +111,21 @@ static void uart1_rev_thread(void *parameter)
     for(;;)
     {
 #if defined(BSP_UART1_RX_USING_DMA)
-        //DMAé‚®ç®±æ•°æ®å¤„ç†ä¸­å¿ƒ
+        //DMAÓÊÏäÊı¾İ´¦ÀíÖĞĞÄ
         len1 = G_UART_1.recv((char *)&uart1rev,RT_WAITING_FOREVER);
         if(len1)
         {
             len1 = G_UART_1.data_processing((char *)&uart1rev,len1);
         }
 #else
-        //ä¸­æ–­æ•°æ®å¤„ç†ä¸­å¿ƒ
-//        /* é˜»å¡ç­‰å¾…æ¥æ”¶ä¿¡å·é‡ï¼Œç­‰åˆ°ä¿¡å·é‡åè¯»å–æ•°æ® */
-//        rt_sem_take(G_UART_1.rx_sem, RT_WAITING_FOREVER);
-        //ç­‰å¾…å®Œæˆä¿¡å·é‡
-        rt_completion_wait(&uart1_completion,RT_WAITING_FOREVER);
-        /* ä»ä¸²å£è¯»å–ä¸€ä¸ªå­—èŠ‚çš„æ•°æ®ï¼Œæ²¡æœ‰è¯»å–åˆ°åˆ™ç­‰å¾…æ¥æ”¶ä¿¡å·é‡ */
-       rt_device_read(G_UART_1.serial, -1, &ch, 1);
-        /* è¯»å–åˆ°çš„æ•°æ®é€šè¿‡ä¸²å£è¾“å‡º */
+        //ÖĞ¶ÏÊı¾İ´¦ÀíÖĞĞÄ
+        /* ´Ó´®¿Ú¶ÁÈ¡Ò»¸ö×Ö½ÚµÄÊı¾İ£¬Ã»ÓĞ¶ÁÈ¡µ½ÔòµÈ´ı½ÓÊÕĞÅºÅÁ¿ */
+        while (rt_device_read(G_UART_1.serial, -1, &ch, 1) != 1)
+        {
+            /* ×èÈûµÈ´ı½ÓÊÕĞÅºÅÁ¿£¬µÈµ½ĞÅºÅÁ¿ºóÔÙ´Î¶ÁÈ¡Êı¾İ */
+            rt_sem_take(G_UART_1.rx_sem, RT_WAITING_FOREVER);
+        }
+        /* ¶ÁÈ¡µ½µÄÊı¾İÍ¨¹ı´®¿ÚÊä³ö */
 //        G_UART_1.send(&ch,1);
         uart1rev[len1] = ch;
         len1 %= config.bufsz-1;
@@ -135,7 +138,7 @@ static void uart1_rev_thread(void *parameter)
 
 int uart1_init(void)
 {
-   /* æŸ¥æ‰¾ç³»ç»Ÿä¸­çš„ä¸²å£è®¾å¤‡ */
+   /* ²éÕÒÏµÍ³ÖĞµÄ´®¿ÚÉè±¸ */
     G_UART_1.serial = rt_device_find(UART1_NAME);
     if (!G_UART_1.serial)
     {
@@ -144,70 +147,52 @@ int uart1_init(void)
     }
 //    uart1_baud_rate_set();
     uart_baud_rate_set(G_UART_1,UART1_DEFAULT_BAUD_RATE);
-    /* è®¾ç½®æ¥æ”¶å›è°ƒå‡½æ•° */
+    /* ÉèÖÃ½ÓÊÕ»Øµ÷º¯Êı */
     rt_device_set_rx_indicate(G_UART_1.serial, uart1_callback);
 #if defined(BSP_UART1_RX_USING_DMA)
-    /* ä»¥DMAæ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
-    rt_device_open(G_UART_1.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_DMA_RX);
+    /* ÒÔDMA½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
+    rt_device_open(G_UART_1.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_DMA_RX );
 #else
-    /* ä»¥ä¸­æ–­æ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔÖĞ¶Ï½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_1.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 #endif
-    /* åˆå§‹åŒ–è¾“å‡ºé‚®ç®± */
+    /* ³õÊ¼»¯Êä³öÓÊÏä */
     if (G_UART_1.out_mb == RT_NULL)
     {
         G_UART_1.out_mb = rt_mb_create("uart1_out_mb", 2, RT_IPC_FLAG_FIFO);
         if (G_UART_1.out_mb == RT_NULL)
         {
-            rt_kprintf("uart1 create out_mb error!\n");
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–DMAé‚®ç®± */
+    /* ³õÊ¼»¯DMAÓÊÏä */
     if (G_UART_1.dma_mb == RT_NULL)
     {
         G_UART_1.dma_mb = rt_mb_create("uart1_dma_mb", 10, RT_IPC_FLAG_FIFO);
         if (G_UART_1.dma_mb == RT_NULL)
         {
-            rt_kprintf("uart1 create dma_mb error!\n");
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–ä¿¡å·é‡ */
+    /* ³õÊ¼»¯ĞÅºÅÁ¿ */
     if (G_UART_1.rx_sem == RT_NULL)
     {
         G_UART_1.rx_sem = rt_sem_create( "uart1_rx_sem", 0, RT_IPC_FLAG_FIFO);
         if (G_UART_1.rx_sem == RT_NULL)
         {
-            rt_kprintf("uart1 create rx_sem error!\n");
             return RT_ERROR;
         }
     }
-#if !defined(BSP_UART1_RX_USING_DMA)
-    /* åˆå§‹åŒ– å®Œæˆä¿¡å·é‡ */
-    rt_completion_init(&uart1_completion);
-#endif
-    /* åˆå§‹åŒ–äº’æ–¥é‡ */
-    if (G_UART_1.tx_mutex == RT_NULL)
-    {
-        G_UART_1.tx_mutex = rt_mutex_create( "uart1_tx_mutex",  RT_IPC_FLAG_FIFO);
-        if (G_UART_1.tx_mutex == RT_NULL)
-        {
-            rt_kprintf("uart1 create tx_mutex error!\n");
-            return RT_ERROR;
-        }
-    }
-
-    /* åˆ›å»º serial çº¿ç¨‹ */
-    rt_thread_t thread = rt_thread_create("uart1_thread", uart1_rev_thread, RT_NULL, 256, 11, 10);
-    /* åˆ›å»ºæˆåŠŸåˆ™å¯åŠ¨çº¿ç¨‹ */
+    /* ´´½¨ serial Ïß³Ì */
+    rt_thread_t thread = rt_thread_create("serial1", uart1_rev_thread, RT_NULL, 2048, 21, 10);
+    /* ´´½¨³É¹¦ÔòÆô¶¯Ïß³Ì */
     if (thread != RT_NULL)
     {
        rt_thread_startup(thread);
     }
     else
     {
-       rt_kprintf("Create %s uart1_thread failed!\n", UART1_NAME);
+       rt_kprintf("Create %s Entry failed!\n", UART1_NAME);
        return RT_ERROR;
     }
     return RT_EOK;
@@ -222,11 +207,8 @@ static rt_size_t uart2_recv(char *buffer, rt_int32_t timeout);
 static rt_err_t uart2_callback(rt_device_t dev, rt_size_t size);
 __WEAK int uart2_data_processing(char *buffer, rt_size_t index);
 static int uart2_init(void);
-#if !defined(BSP_UART2_RX_USING_DMA)
-struct rt_completion uart2_completion;
-#endif
+
 uart_t G_UART_2 = {
-        RT_NULL,
         RT_NULL,
         RT_NULL,
         RT_NULL,
@@ -235,27 +217,15 @@ uart_t G_UART_2 = {
 #if defined(BSP_UART2_RX_USING_DMA)
         uart2_recv,
 #else
-        RT_NULL,
+        NULL,
 #endif
         uart2_callback,
         uart2_init,
-        uart2_data_processing,
-        RT_NULL,
-        1024};
+        uart2_data_processing };
 
 static rt_size_t uart2_send(void *data, rt_size_t size)
 {
-    rt_size_t length=0;
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_take(G_UART_2.tx_mutex, RT_WAITING_FOREVER);
-    }
-        length = rt_device_write(G_UART_2.serial, 0, data, size);
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_release(G_UART_2.tx_mutex);
-    }
-    return length;
+    return rt_device_write(G_UART_2.serial, 0, data, size);
 }
 
 
@@ -273,17 +243,15 @@ static rt_size_t uart2_recv(char *buffer, rt_int32_t timeout)
 }
 
 
-/* æ¥æ”¶æ•°æ®å›è°ƒå‡½æ•° */
+/* ½ÓÊÕÊı¾İ»Øµ÷º¯Êı */
 static rt_err_t uart2_callback(rt_device_t dev, rt_size_t size)
 {
 #if defined(BSP_UART2_RX_USING_DMA)
-    /* å‘é€é‚®ä»¶ */
+    /* ·¢ËÍÓÊ¼ş */
     return rt_mb_send(G_UART_2.dma_mb, size);
 #else
-//    /* ä¸²å£æ¥æ”¶åˆ°æ•°æ®åäº§ç”Ÿä¸­æ–­ï¼Œè°ƒç”¨æ­¤å›è°ƒå‡½æ•°ï¼Œç„¶åå‘é€æ¥æ”¶ä¿¡å·é‡ */
-//    return rt_sem_release(G_UART_2.rx_sem);
-    //å‘é€å®Œæˆä¿¡å·é‡
-      rt_completion_done(&uart2_completion);
+    /* ´®¿Ú½ÓÊÕµ½Êı¾İºó²úÉúÖĞ¶Ï£¬µ÷ÓÃ´Ë»Øµ÷º¯Êı£¬È»ºó·¢ËÍ½ÓÊÕĞÅºÅÁ¿ */
+    return rt_sem_release(G_UART_2.rx_sem);
 #endif
 }
 
@@ -292,7 +260,7 @@ __WEAK int uart2_data_processing(char *buffer, rt_size_t index)
 #if defined(BSP_UART2_RX_USING_DMA)
     if(index)
 #else
-    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ä¸­æ–­å¿…é¡»è¦é™åˆ¶æ‰èƒ½è¾“å‡ºå­—ç¬¦ä¸²
+    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ÖĞ¶Ï±ØĞëÒªÏŞÖÆ²ÅÄÜÊä³ö×Ö·û´®
 #endif
     {
         rt_uprintf(G_UART_2, "usart2 ");
@@ -307,7 +275,7 @@ __WEAK int uart2_data_processing(char *buffer, rt_size_t index)
 static void uart2_rev_thread(void *parameter)
 {
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-//        config.bufsz = 300;//è®¾ç½®æ¥æ”¶ç¼“å†²åŒºå¤§å°,ä¸è®¾ç½®åˆ™é»˜è®¤å¤§å°
+    //    config.bufsz = 100;//ÉèÖÃ½ÓÊÕ»º³åÇø´óĞ¡,²»ÉèÖÃÔòÄ¬ÈÏ´óĞ¡
     char uart2rev[config.bufsz];
     memset(uart2rev,0,config.bufsz);
     rt_size_t len2=0;
@@ -316,21 +284,21 @@ static void uart2_rev_thread(void *parameter)
     for(;;)
     {
 #if defined(BSP_UART2_RX_USING_DMA)
-        //DMAé‚®ç®±æ•°æ®å¤„ç†ä¸­å¿ƒ
+        //DMAÓÊÏäÊı¾İ´¦ÀíÖĞĞÄ
         len2 = G_UART_2.recv((char *)&uart2rev,RT_WAITING_FOREVER);
         if(len2)
         {
             len2 = G_UART_2.data_processing((char *)&uart2rev,len2);
         }
 #else
-        //ä¸­æ–­æ•°æ®å¤„ç†ä¸­å¿ƒ
-//        /* é˜»å¡ç­‰å¾…æ¥æ”¶ä¿¡å·é‡ï¼Œç­‰åˆ°ä¿¡å·é‡åè¯»å–æ•°æ® */
-//        rt_sem_take(G_UART_2.rx_sem, RT_WAITING_FOREVER);
-        //ç­‰å¾…å®Œæˆä¿¡å·é‡
-        rt_completion_wait(&uart2_completion,RT_WAITING_FOREVER);
-        /* ä»ä¸²å£è¯»å–ä¸€ä¸ªå­—èŠ‚çš„æ•°æ® */
-        rt_device_read(G_UART_2.serial, -1, &ch, 1);
-        /* è¯»å–åˆ°çš„æ•°æ®é€šè¿‡ä¸²å£è¾“å‡º */
+        //ÖĞ¶ÏÊı¾İ´¦ÀíÖĞĞÄ
+        /* ´Ó´®¿Ú¶ÁÈ¡Ò»¸ö×Ö½ÚµÄÊı¾İ£¬Ã»ÓĞ¶ÁÈ¡µ½ÔòµÈ´ı½ÓÊÕĞÅºÅÁ¿ */
+        while (rt_device_read(G_UART_2.serial, -1, &ch, 1) != 1)
+        {
+            /* ×èÈûµÈ´ı½ÓÊÕĞÅºÅÁ¿£¬µÈµ½ĞÅºÅÁ¿ºóÔÙ´Î¶ÁÈ¡Êı¾İ */
+            rt_sem_take(G_UART_2.rx_sem, RT_WAITING_FOREVER);
+        }
+        /* ¶ÁÈ¡µ½µÄÊı¾İÍ¨¹ı´®¿ÚÊä³ö */
 //        G_UART_2.send(&ch,1);
         uart2rev[len2] = ch;
         len2 %= config.bufsz-1;
@@ -343,7 +311,7 @@ static void uart2_rev_thread(void *parameter)
 
 int uart2_init(void)
 {
-    /* æŸ¥æ‰¾ç³»ç»Ÿä¸­çš„ä¸²å£è®¾å¤‡ */
+    /* ²éÕÒÏµÍ³ÖĞµÄ´®¿ÚÉè±¸ */
     G_UART_2.serial = rt_device_find(UART2_NAME);
     if (!G_UART_2.serial)
     {
@@ -351,16 +319,16 @@ int uart2_init(void)
         return RT_ERROR;
     }
     uart_baud_rate_set(G_UART_2,UART2_DEFAULT_BAUD_RATE);
-    /* è®¾ç½®æ¥æ”¶å›è°ƒå‡½æ•° */
+    /* ÉèÖÃ½ÓÊÕ»Øµ÷º¯Êı */
     rt_device_set_rx_indicate(G_UART_2.serial, uart2_callback);
 #if defined(BSP_UART2_RX_USING_DMA)
-    /* ä»¥DMAæ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔDMA½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_2.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_DMA_RX );
 #else
-    /* ä»¥ä¸­æ–­æ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔÖĞ¶Ï½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_2.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 #endif
-    /* åˆå§‹åŒ–è¾“å‡ºé‚®ç®± */
+    /* ³õÊ¼»¯Êä³öÓÊÏä */
     if (G_UART_2.out_mb == RT_NULL)
     {
         G_UART_2.out_mb = rt_mb_create("uart2_out_mb", 1, RT_IPC_FLAG_FIFO);
@@ -369,7 +337,7 @@ int uart2_init(void)
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–DMAé‚®ç®± */
+    /* ³õÊ¼»¯DMAÓÊÏä */
     if (G_UART_2.dma_mb == RT_NULL)
     {
         G_UART_2.dma_mb = rt_mb_create("uart2_dma_mb", 1, RT_IPC_FLAG_FIFO);
@@ -378,7 +346,7 @@ int uart2_init(void)
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–ä¿¡å·é‡ */
+    /* ³õÊ¼»¯ĞÅºÅÁ¿ */
     if (G_UART_2.rx_sem == RT_NULL)
     {
         G_UART_2.rx_sem = rt_sem_create( "uart2_rx_sem", 0, RT_IPC_FLAG_FIFO);
@@ -387,22 +355,9 @@ int uart2_init(void)
             return RT_ERROR;
         }
     }
-#if !defined(BSP_UART2_RX_USING_DMA)
-    /* åˆå§‹åŒ– å®Œæˆä¿¡å·é‡ */
-    rt_completion_init(&uart2_completion);
-#endif
-    /* åˆå§‹åŒ–äº’æ–¥é‡ */
-    if (G_UART_2.tx_mutex == RT_NULL)
-    {
-        G_UART_2.tx_mutex = rt_mutex_create( "uart2_tx_mutex",  RT_IPC_FLAG_FIFO);
-        if (G_UART_2.tx_mutex == RT_NULL)
-        {
-            return RT_ERROR;
-        }
-    }
-    /* åˆ›å»º serial çº¿ç¨‹ */
-    rt_thread_t thread = rt_thread_create("uart2_thread", uart2_rev_thread, RT_NULL, 256, 14, 10);
-    /* åˆ›å»ºæˆåŠŸåˆ™å¯åŠ¨çº¿ç¨‹ */
+    /* ´´½¨ serial Ïß³Ì */
+    rt_thread_t thread = rt_thread_create("serial2", uart2_rev_thread, RT_NULL, 2048, 22, 10);
+    /* ´´½¨³É¹¦ÔòÆô¶¯Ïß³Ì */
     if (thread != RT_NULL)
     {
        rt_thread_startup(thread);
@@ -410,20 +365,7 @@ int uart2_init(void)
     }
     else
     {
-       rt_kprintf("Create %s uart2_thread failed!\n", UART2_NAME);
-       return RT_ERROR;
-    }
-    //åˆå§‹åŒ–ringbuffer
-    G_UART_2.ringbuffer = rt_ringbuffer_create(G_UART_2.ringbuffer_size);
-    /* åˆ›å»ºæˆåŠŸåˆ™å¯åŠ¨çº¿ç¨‹ */
-    if (G_UART_2.ringbuffer != RT_NULL)
-    {
-        rt_kprintf("Create uart2_ringbuffer failed!\n");
-       return RT_EOK;
-    }
-    else
-    {
-       rt_kprintf("Create uart2_ringbuffer failed!\n");
+       rt_kprintf("Create %s Entry failed!\n", UART2_NAME);
        return RT_ERROR;
     }
 }
@@ -439,11 +381,7 @@ static rt_err_t uart3_callback(rt_device_t dev, rt_size_t size);
 __WEAK int uart3_data_processing(char *buffer, rt_size_t index);
 static int uart3_init(void);
 
-#if !defined(BSP_UART3_RX_USING_DMA)
-struct rt_completion uart3_completion;
-#endif
 uart_t G_UART_3 = {
-        RT_NULL,
         RT_NULL,
         RT_NULL,
         RT_NULL,
@@ -456,23 +394,11 @@ uart_t G_UART_3 = {
 #endif
         uart3_callback,
         uart3_init,
-        uart3_data_processing,
-        RT_NULL,
-        1024};
+        uart3_data_processing};
 
 static rt_size_t uart3_send(void *data, rt_size_t size)
 {
-    rt_size_t length=0;
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_take(G_UART_3.tx_mutex, RT_WAITING_FOREVER);
-    }
-        length = rt_device_write(G_UART_3.serial, 0, data, size);
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_release(G_UART_3.tx_mutex);
-    }
-    return length;
+    return rt_device_write(G_UART_3.serial, 0, data, size);
 }
 
 
@@ -490,17 +416,15 @@ static rt_size_t uart3_recv(char *buffer, rt_int32_t timeout)
 }
 
 
-/* æ¥æ”¶æ•°æ®å›è°ƒå‡½æ•° */
+/* ½ÓÊÕÊı¾İ»Øµ÷º¯Êı */
 static rt_err_t uart3_callback(rt_device_t dev, rt_size_t size)
 {
 #if defined(BSP_UART3_RX_USING_DMA)
-    /* å‘é€é‚®ä»¶ */
+    /* ·¢ËÍÓÊ¼ş */
     return rt_mb_send(G_UART_3.dma_mb, size);
 #else
-//    /* ä¸²å£æ¥æ”¶åˆ°æ•°æ®åäº§ç”Ÿä¸­æ–­ï¼Œè°ƒç”¨æ­¤å›è°ƒå‡½æ•°ï¼Œç„¶åå‘é€æ¥æ”¶ä¿¡å·é‡ */
-//    return rt_sem_release(G_UART_3.rx_sem);
-    //å‘é€å®Œæˆä¿¡å·é‡
-    rt_completion_done(&uart3_completion);
+    /* ´®¿Ú½ÓÊÕµ½Êı¾İºó²úÉúÖĞ¶Ï£¬µ÷ÓÃ´Ë»Øµ÷º¯Êı£¬È»ºó·¢ËÍ½ÓÊÕĞÅºÅÁ¿ */
+    return rt_sem_release(G_UART_3.rx_sem);
 #endif
 }
 
@@ -510,7 +434,7 @@ __WEAK int uart3_data_processing(char *buffer, rt_size_t index)
 #if defined(BSP_UART3_RX_USING_DMA)
     if(index)
 #else
-    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ä¸­æ–­å¿…é¡»è¦é™åˆ¶æ‰èƒ½è¾“å‡ºå­—ç¬¦ä¸²
+    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ÖĞ¶Ï±ØĞëÒªÏŞÖÆ²ÅÄÜÊä³ö×Ö·û´®
 #endif
     {
         rt_uprintf(G_UART_3, "usart3 ");
@@ -522,11 +446,10 @@ __WEAK int uart3_data_processing(char *buffer, rt_size_t index)
     return index;
 }
 
-
 static void uart3_rev_thread(void *parameter)
 {
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-    //    config.bufsz = 100;//è®¾ç½®æ¥æ”¶ç¼“å†²åŒºå¤§å°,ä¸è®¾ç½®åˆ™é»˜è®¤å¤§å°
+    //    config.bufsz = 100;//ÉèÖÃ½ÓÊÕ»º³åÇø´óĞ¡,²»ÉèÖÃÔòÄ¬ÈÏ´óĞ¡
     char uart3rev[config.bufsz];
     memset(uart3rev,0,config.bufsz);
     rt_size_t len3=0;
@@ -535,21 +458,21 @@ static void uart3_rev_thread(void *parameter)
     for(;;)
     {
 #if defined(BSP_UART3_RX_USING_DMA)
-        //DMAé‚®ç®±æ•°æ®å¤„ç†ä¸­å¿ƒ
+        //DMAÓÊÏäÊı¾İ´¦ÀíÖĞĞÄ
         len3 = G_UART_3.recv((char *)&uart3rev,RT_WAITING_FOREVER);
         if(len3)
         {
             len3 = G_UART_3.data_processing((char *)&uart3rev,len3);
         }
 #else
-        //ä¸­æ–­æ•°æ®å¤„ç†ä¸­å¿ƒ
-//        /* é˜»å¡ç­‰å¾…æ¥æ”¶ä¿¡å·é‡ï¼Œç­‰åˆ°ä¿¡å·é‡åè¯»å–æ•°æ® */
-//        rt_sem_take(G_UART_3.rx_sem, RT_WAITING_FOREVER);
-        //ç­‰å¾…å®Œæˆä¿¡å·é‡
-        rt_completion_wait(&uart3_completion,RT_WAITING_FOREVER);
-        /* ä»ä¸²å£è¯»å–ä¸€ä¸ªå­—èŠ‚çš„æ•°æ® */
-        rt_device_read(G_UART_3.serial, -1, &ch, 1);
-        /* è¯»å–åˆ°çš„æ•°æ®é€šè¿‡ä¸²å£è¾“å‡º */
+        //ÖĞ¶ÏÊı¾İ´¦ÀíÖĞĞÄ
+        /* ´Ó´®¿Ú¶ÁÈ¡Ò»¸ö×Ö½ÚµÄÊı¾İ£¬Ã»ÓĞ¶ÁÈ¡µ½ÔòµÈ´ı½ÓÊÕĞÅºÅÁ¿ */
+        while (rt_device_read(G_UART_3.serial, -1, &ch, 1) != 1)
+        {
+            /* ×èÈûµÈ´ı½ÓÊÕĞÅºÅÁ¿£¬µÈµ½ĞÅºÅÁ¿ºóÔÙ´Î¶ÁÈ¡Êı¾İ */
+            rt_sem_take(G_UART_3.rx_sem, RT_WAITING_FOREVER);
+        }
+        /* ¶ÁÈ¡µ½µÄÊı¾İÍ¨¹ı´®¿ÚÊä³ö */
 //        G_UART_3.send(&ch,1);
         uart3rev[len3] = ch;
         len3 %= config.bufsz-1;
@@ -562,7 +485,7 @@ static void uart3_rev_thread(void *parameter)
 
 int uart3_init(void)
 {
-    /* æŸ¥æ‰¾ç³»ç»Ÿä¸­çš„ä¸²å£è®¾å¤‡ */
+    /* ²éÕÒÏµÍ³ÖĞµÄ´®¿ÚÉè±¸ */
     G_UART_3.serial = rt_device_find(UART3_NAME);
     if (!G_UART_3.serial)
     {
@@ -570,16 +493,16 @@ int uart3_init(void)
         return RT_ERROR;
     }
     uart_baud_rate_set(G_UART_3,UART3_DEFAULT_BAUD_RATE);
-    /* è®¾ç½®æ¥æ”¶å›è°ƒå‡½æ•° */
+    /* ÉèÖÃ½ÓÊÕ»Øµ÷º¯Êı */
     rt_device_set_rx_indicate(G_UART_3.serial, uart3_callback);
 #if defined(BSP_UART3_RX_USING_DMA)
-    /* ä»¥DMAæ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔDMA½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_3.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_DMA_RX );
 #else
-    /* ä»¥ä¸­æ–­æ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔÖĞ¶Ï½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_3.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 #endif
-    /* åˆå§‹åŒ–è¾“å‡ºé‚®ç®± */
+    /* ³õÊ¼»¯Êä³öÓÊÏä */
     if (G_UART_3.out_mb == RT_NULL)
     {
         G_UART_3.out_mb = rt_mb_create("uart3_out_mb", 1, RT_IPC_FLAG_FIFO);
@@ -588,7 +511,7 @@ int uart3_init(void)
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–DMAé‚®ç®± */
+    /* ³õÊ¼»¯DMAÓÊÏä */
     if (G_UART_3.dma_mb == RT_NULL)
     {
         G_UART_3.dma_mb = rt_mb_create("uart3__dma_mb", 1, RT_IPC_FLAG_FIFO);
@@ -597,7 +520,7 @@ int uart3_init(void)
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–ä¿¡å·é‡ */
+    /* ³õÊ¼»¯ĞÅºÅÁ¿ */
     if (G_UART_3.rx_sem == RT_NULL)
     {
         G_UART_3.rx_sem = rt_sem_create( "uart3_rx_sem", 0, RT_IPC_FLAG_FIFO);
@@ -606,22 +529,9 @@ int uart3_init(void)
             return RT_ERROR;
         }
     }
-#if !defined(BSP_UART3_RX_USING_DMA)
-    /* åˆå§‹åŒ– å®Œæˆä¿¡å·é‡ */
-    rt_completion_init(&uart3_completion);
-#endif
-    /* åˆå§‹åŒ–äº’æ–¥é‡ */
-    if (G_UART_3.tx_mutex == RT_NULL)
-    {
-        G_UART_3.tx_mutex = rt_mutex_create( "uart3_tx_mutex",  RT_IPC_FLAG_FIFO);
-        if (G_UART_3.tx_mutex == RT_NULL)
-        {
-            return RT_ERROR;
-        }
-    }
-    /* åˆ›å»º serial çº¿ç¨‹ */
-    rt_thread_t thread = rt_thread_create("uart3_thread", uart3_rev_thread, RT_NULL, 2048, 23, 10);
-    /* åˆ›å»ºæˆåŠŸåˆ™å¯åŠ¨çº¿ç¨‹ */
+    /* ´´½¨ serial Ïß³Ì */
+    rt_thread_t thread = rt_thread_create("serial3", uart3_rev_thread, RT_NULL, 2048, 23, 10);
+    /* ´´½¨³É¹¦ÔòÆô¶¯Ïß³Ì */
     if (thread != RT_NULL)
     {
        rt_thread_startup(thread);
@@ -632,7 +542,6 @@ int uart3_init(void)
        rt_kprintf("Create %s Entry failed!\n", UART3_NAME);
        return RT_ERROR;
     }
-
 }
 #endif
 
@@ -643,13 +552,8 @@ static rt_size_t uart4_recv(char *buffer, rt_int32_t timeout);
 static rt_err_t uart4_callback(rt_device_t dev, rt_size_t size);
 __WEAK int uart4_data_processing(char *buffer, rt_size_t index);
 static int uart4_init(void);
-rt_sem_t sem_uart4_rx = RT_NULL;
 
-#if !defined(BSP_UART4_RX_USING_DMA)
-struct rt_completion uart4_completion;
-#endif
 uart_t G_UART_4 = {
-        RT_NULL,
         RT_NULL,
         RT_NULL,
         RT_NULL,
@@ -662,24 +566,13 @@ uart_t G_UART_4 = {
 #endif
         uart4_callback,
         uart4_init,
-        uart4_data_processing,
-        RT_NULL,
-        1024};
+        uart4_data_processing};
 
 static rt_size_t uart4_send(void *data, rt_size_t size)
 {
-    rt_size_t length=0;
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_take(G_UART_4.tx_mutex, RT_WAITING_FOREVER);
-    }
-        length = rt_device_write(G_UART_4.serial, 0, data, size);
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_release(G_UART_4.tx_mutex);
-    }
-    return length;
+    return rt_device_write(G_UART_4.serial, 0, data, size);
 }
+
 
 static rt_size_t uart4_recv(char *buffer, rt_int32_t timeout)
 {
@@ -695,17 +588,15 @@ static rt_size_t uart4_recv(char *buffer, rt_int32_t timeout)
 }
 
 
-/* æ¥æ”¶æ•°æ®å›è°ƒå‡½æ•° */
+/* ½ÓÊÕÊı¾İ»Øµ÷º¯Êı */
 static rt_err_t uart4_callback(rt_device_t dev, rt_size_t size)
 {
 #if defined(BSP_UART4_RX_USING_DMA)
-    /* å‘é€é‚®ä»¶ */
+    /* ·¢ËÍÓÊ¼ş */
     return rt_mb_send(G_UART_4.dma_mb, size);
 #else
-//    /* ä¸²å£æ¥æ”¶åˆ°æ•°æ®åäº§ç”Ÿä¸­æ–­ï¼Œè°ƒç”¨æ­¤å›è°ƒå‡½æ•°ï¼Œç„¶åå‘é€æ¥æ”¶ä¿¡å·é‡ */
-//    return rt_sem_release(G_UART_4.rx_sem);
-    //å‘é€å®Œæˆä¿¡å·é‡
-    rt_completion_done(&uart4_completion);
+    /* ´®¿Ú½ÓÊÕµ½Êı¾İºó²úÉúÖĞ¶Ï£¬µ÷ÓÃ´Ë»Øµ÷º¯Êı£¬È»ºó·¢ËÍ½ÓÊÕĞÅºÅÁ¿ */
+    return rt_sem_release(G_UART_4.rx_sem);
 #endif
 }
 
@@ -715,7 +606,7 @@ __WEAK int uart4_data_processing(char *buffer, rt_size_t index)
 #if defined(BSP_UART4_RX_USING_DMA)
     if(index)
 #else
-    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ä¸­æ–­å¿…é¡»è¦é™åˆ¶æ‰èƒ½è¾“å‡ºå­—ç¬¦ä¸²
+    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ÖĞ¶Ï±ØĞëÒªÏŞÖÆ²ÅÄÜÊä³ö×Ö·û´®
 #endif
     {
         rt_uprintf(G_UART_4, "uart4 ");
@@ -730,7 +621,7 @@ __WEAK int uart4_data_processing(char *buffer, rt_size_t index)
 static void uart4_rev_thread(void *parameter)
 {
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-//        config.bufsz = 1000;//è®¾ç½®æ¥æ”¶ç¼“å†²åŒºå¤§å°,ä¸è®¾ç½®åˆ™é»˜è®¤å¤§å°
+    //    config.bufsz = 100;//ÉèÖÃ½ÓÊÕ»º³åÇø´óĞ¡,²»ÉèÖÃÔòÄ¬ÈÏ´óĞ¡
     char uart4rev[config.bufsz];
     memset(uart4rev,0,config.bufsz);
     rt_size_t len4=0;
@@ -739,25 +630,24 @@ static void uart4_rev_thread(void *parameter)
     for(;;)
     {
 #if defined(BSP_UART4_RX_USING_DMA)
-        //DMAé‚®ç®±æ•°æ®å¤„ç†ä¸­å¿ƒ
+        //DMAÓÊÏäÊı¾İ´¦ÀíÖĞĞÄ
         len4 = G_UART_4.recv((char *)&uart4rev,RT_WAITING_FOREVER);
         if(len4)
         {
             len4 = G_UART_4.data_processing((char *)&uart4rev,len4);
-            rt_memset(uart4rev,0,config.bufsz);
         }
 #else
-        //ä¸­æ–­æ•°æ®å¤„ç†ä¸­å¿ƒ
-//        /* é˜»å¡ç­‰å¾…æ¥æ”¶ä¿¡å·é‡ï¼Œç­‰åˆ°ä¿¡å·é‡åè¯»å–æ•°æ® */
-//        rt_sem_take(G_UART_4.rx_sem, RT_WAITING_FOREVER);
-        //ç­‰å¾…å®Œæˆä¿¡å·é‡
-        rt_completion_wait(&uart4_completion,RT_WAITING_FOREVER);
-        /* ä»ä¸²å£è¯»å–ä¸€ä¸ªå­—èŠ‚çš„æ•°æ® */
-        rt_device_read(G_UART_4.serial, -1, &ch, 1);
-        /* è¯»å–åˆ°çš„æ•°æ®é€šè¿‡ä¸²å£è¾“å‡º */
+        //ÖĞ¶ÏÊı¾İ´¦ÀíÖĞĞÄ
+        /* ´Ó´®¿Ú¶ÁÈ¡Ò»¸ö×Ö½ÚµÄÊı¾İ£¬Ã»ÓĞ¶ÁÈ¡µ½ÔòµÈ´ı½ÓÊÕĞÅºÅÁ¿ */
+        while (rt_device_read(G_UART_4.serial, -1, &ch, 1) != 1)
+        {
+            /* ×èÈûµÈ´ı½ÓÊÕĞÅºÅÁ¿£¬µÈµ½ĞÅºÅÁ¿ºóÔÙ´Î¶ÁÈ¡Êı¾İ */
+            rt_sem_take(G_UART_4.rx_sem, RT_WAITING_FOREVER);
+        }
+        /* ¶ÁÈ¡µ½µÄÊı¾İÍ¨¹ı´®¿ÚÊä³ö */
 //        G_UART_4.send(&ch,1);
         uart4rev[len4] = ch;
-        len4 %= config.bufsz-1; //é˜²æ­¢æ•°ç»„æº¢å‡º
+        len4 %= config.bufsz-1;
         len4 ++;
         len4 = G_UART_4.data_processing((char *)&uart4rev,len4);
 #endif
@@ -767,7 +657,7 @@ static void uart4_rev_thread(void *parameter)
 
 int uart4_init(void)
 {
-    /* æŸ¥æ‰¾ç³»ç»Ÿä¸­çš„ä¸²å£è®¾å¤‡ */
+    /* ²éÕÒÏµÍ³ÖĞµÄ´®¿ÚÉè±¸ */
     G_UART_4.serial = rt_device_find(UART4_NAME);
     if (!G_UART_4.serial)
     {
@@ -775,16 +665,16 @@ int uart4_init(void)
         return RT_ERROR;
     }
     uart_baud_rate_set(G_UART_4,UART4_DEFAULT_BAUD_RATE);
-    /* è®¾ç½®æ¥æ”¶å›è°ƒå‡½æ•° */
+    /* ÉèÖÃ½ÓÊÕ»Øµ÷º¯Êı */
     rt_device_set_rx_indicate(G_UART_4.serial, uart4_callback);
 #if defined(BSP_UART4_RX_USING_DMA)
-    /* ä»¥DMAæ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔDMA½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_4.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_DMA_RX );
 #else
-    /* ä»¥ä¸­æ–­æ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔÖĞ¶Ï½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
     rt_device_open(G_UART_4.serial, RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 #endif
-    /* åˆå§‹åŒ–è¾“å‡ºé‚®ç®± */
+    /* ³õÊ¼»¯Êä³öÓÊÏä */
     if (G_UART_4.out_mb == RT_NULL)
     {
         G_UART_4.out_mb = rt_mb_create("uart4_out_mb", 1, RT_IPC_FLAG_FIFO);
@@ -793,7 +683,7 @@ int uart4_init(void)
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–DMAé‚®ç®± */
+    /* ³õÊ¼»¯DMAÓÊÏä */
     if (G_UART_4.dma_mb == RT_NULL)
     {
         G_UART_4.dma_mb = rt_mb_create("uart4_dma_mb", 1, RT_IPC_FLAG_FIFO);
@@ -803,7 +693,7 @@ int uart4_init(void)
         }
     }
 
-    /* åˆå§‹åŒ–ä¿¡å·é‡ */
+    /* ³õÊ¼»¯ĞÅºÅÁ¿ */
     if (G_UART_4.rx_sem == RT_NULL)
     {
         G_UART_4.rx_sem = rt_sem_create( "uart4_rx_sem", 0, RT_IPC_FLAG_FIFO);
@@ -812,22 +702,9 @@ int uart4_init(void)
             return RT_ERROR;
         }
     }
-#if !defined(BSP_UART4_RX_USING_DMA)
-    /* åˆå§‹åŒ– å®Œæˆä¿¡å·é‡ */
-    rt_completion_init(&uart4_completion);
-#endif
-    /* åˆå§‹åŒ–äº’æ–¥é‡ */
-    if (G_UART_4.tx_mutex == RT_NULL)
-    {
-        G_UART_4.tx_mutex = rt_mutex_create( "uart4_tx_mutex",  RT_IPC_FLAG_FIFO);
-        if (G_UART_4.tx_mutex == RT_NULL)
-        {
-            return RT_ERROR;
-        }
-    }
-    /* åˆ›å»º serial çº¿ç¨‹ */
-    rt_thread_t thread = rt_thread_create("uart4_thread", uart4_rev_thread, RT_NULL, 4096, 24, 10);
-    /* åˆ›å»ºæˆåŠŸåˆ™å¯åŠ¨çº¿ç¨‹ */
+    /* ´´½¨ serial Ïß³Ì */
+    rt_thread_t thread = rt_thread_create("serial4", uart4_rev_thread, RT_NULL, 2048, 24, 10);
+    /* ´´½¨³É¹¦ÔòÆô¶¯Ïß³Ì */
     if (thread != RT_NULL)
     {
        rt_thread_startup(thread);
@@ -843,16 +720,13 @@ int uart4_init(void)
 
 
 
-#if defined(USING_UART5)
+#if defined(BSP_USING_UART5)
 static rt_size_t uart5_send(void *data, rt_size_t size);
 static rt_err_t uart5_callback(rt_device_t dev, rt_size_t size);
 __WEAK int uart5_data_processing(char *buffer, rt_size_t index);
 static int uart5_init(void);
 
-
-struct rt_completion uart5_completion;
 uart_t G_UART_5 = {
-        RT_NULL,
         RT_NULL,
         RT_NULL,
         RT_NULL,
@@ -861,39 +735,25 @@ uart_t G_UART_5 = {
         NULL,
         uart5_callback,
         uart5_init,
-        uart5_data_processing,
-        RT_NULL,
-        1024};
+        uart5_data_processing};
 
 static rt_size_t uart5_send(void *data, rt_size_t size)
 {
-    rt_size_t length=0;
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_take(G_UART_5.tx_mutex, RT_WAITING_FOREVER);
-    }
-        length = rt_device_write(G_UART_5.serial, 0, data, size);
-    if(rt_interrupt_get_nest() == 0u && rt_thread_self() != RT_NULL)
-    {
-        rt_mutex_release(G_UART_5.tx_mutex);
-    }
-    return length;
+    return rt_device_write(G_UART_5.serial, 0, data, size);
 }
 
-/* æ¥æ”¶æ•°æ®å›è°ƒå‡½æ•° */
+/* ½ÓÊÕÊı¾İ»Øµ÷º¯Êı */
 static rt_err_t uart5_callback(rt_device_t dev, rt_size_t size)
 {
-//    /* ä¸²å£æ¥æ”¶åˆ°æ•°æ®åäº§ç”Ÿä¸­æ–­ï¼Œè°ƒç”¨æ­¤å›è°ƒå‡½æ•°ï¼Œç„¶åå‘é€æ¥æ”¶ä¿¡å·é‡ */
-//    rt_sem_release(G_UART_5.rx_sem);
-    //å‘é€å®Œæˆä¿¡å·é‡
-    rt_completion_done(&uart5_completion);
+    /* ´®¿Ú½ÓÊÕµ½Êı¾İºó²úÉúÖĞ¶Ï£¬µ÷ÓÃ´Ë»Øµ÷º¯Êı£¬È»ºó·¢ËÍ½ÓÊÕĞÅºÅÁ¿ */
+    rt_sem_release(G_UART_5.rx_sem);
     return RT_EOK;
 }
 
 
 __WEAK int uart5_data_processing(char *buffer, rt_size_t index)
 {
-    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ä¸­æ–­å¿…é¡»è¦é™åˆ¶æ‰èƒ½è¾“å‡ºå­—ç¬¦ä¸²
+    if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//ÖĞ¶Ï±ØĞëÒªÏŞÖÆ²ÅÄÜÊä³ö×Ö·û´®
     {
         rt_uprintf(G_UART_5, "uart5 ");
         G_UART_5.send(buffer,index);
@@ -907,7 +767,7 @@ __WEAK int uart5_data_processing(char *buffer, rt_size_t index)
 static void uart5_rev_thread(void *parameter)
 {
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-    //    config.bufsz = 100;//è®¾ç½®æ¥æ”¶ç¼“å†²åŒºå¤§å°,ä¸è®¾ç½®åˆ™é»˜è®¤å¤§å°
+    //    config.bufsz = 100;//ÉèÖÃ½ÓÊÕ»º³åÇø´óĞ¡,²»ÉèÖÃÔòÄ¬ÈÏ´óĞ¡
     char uart5rev[config.bufsz];
     memset(uart5rev,0,config.bufsz);
     rt_size_t len5=0;
@@ -915,14 +775,15 @@ static void uart5_rev_thread(void *parameter)
 
     for(;;)
     {
-        //ä¸­æ–­æ•°æ®å¤„ç†ä¸­å¿ƒ
-//        /* é˜»å¡ç­‰å¾…æ¥æ”¶ä¿¡å·é‡ï¼Œç­‰åˆ°ä¿¡å·é‡åè¯»å–æ•°æ® */
-//        rt_sem_take(G_UART_5.rx_sem, RT_WAITING_FOREVER);
-        //ç­‰å¾…å®Œæˆä¿¡å·é‡
-        rt_completion_wait(&uart5_completion,RT_WAITING_FOREVER);
-        /* ä»ä¸²å£è¯»å–ä¸€ä¸ªå­—èŠ‚çš„æ•°æ®*/
-        rt_device_read(G_UART_5.serial, -1, &ch, 1);
-        /* è¯»å–åˆ°çš„æ•°æ®é€šè¿‡ä¸²å£è¾“å‡º */
+        //ÖĞ¶ÏÊı¾İ´¦ÀíÖĞĞÄ
+        /* ´Ó´®¿Ú¶ÁÈ¡Ò»¸ö×Ö½ÚµÄÊı¾İ£¬Ã»ÓĞ¶ÁÈ¡µ½ÔòµÈ´ı½ÓÊÕĞÅºÅÁ¿ */
+        while (rt_device_read(G_UART_5.serial, -1, &ch, 1) != 1)
+        {
+
+            /* ×èÈûµÈ´ı½ÓÊÕĞÅºÅÁ¿£¬µÈµ½ĞÅºÅÁ¿ºóÔÙ´Î¶ÁÈ¡Êı¾İ */
+            rt_sem_take(G_UART_5.rx_sem, RT_WAITING_FOREVER);
+        }
+        /* ¶ÁÈ¡µ½µÄÊı¾İÍ¨¹ı´®¿ÚÊä³ö */
 //        G_UART_5.send(&ch,1);
         uart5rev[len5] = ch;
         len5 %= config.bufsz-1;
@@ -934,13 +795,13 @@ static void uart5_rev_thread(void *parameter)
 
 int uart5_init(void)
 {
-   /* æŸ¥æ‰¾ç³»ç»Ÿä¸­çš„ä¸²å£è®¾å¤‡ */
+   /* ²éÕÒÏµÍ³ÖĞµÄ´®¿ÚÉè±¸ */
     G_UART_5.serial = rt_device_find(UART5_NAME);
     if (!G_UART_5.serial)
     {
        rt_kprintf("find %s failed!\n", UART5_NAME);
     }
-    /* åˆå§‹åŒ–è¾“å‡ºé‚®ç®± */
+    /* ³õÊ¼»¯Êä³öÓÊÏä */
     if (G_UART_5.out_mb == RT_NULL)
     {
         G_UART_5.out_mb = rt_mb_create("uart5_out_mb", 1, RT_IPC_FLAG_FIFO);
@@ -949,34 +810,17 @@ int uart5_init(void)
             return RT_ERROR;
         }
     }
-    /* åˆå§‹åŒ–ä¿¡å·é‡ */
-    if (G_UART_5.rx_sem == RT_NULL)
-    {
-        G_UART_5.rx_sem = rt_sem_create( "uart5_rx_sem", 0, RT_IPC_FLAG_FIFO);
-        if (G_UART_5.rx_sem == RT_NULL)
-        {
-            return RT_ERROR;
-        }
-    }
-    /* åˆå§‹åŒ– å®Œæˆä¿¡å·é‡ */
-    rt_completion_init(&uart5_completion);
-    /* åˆå§‹åŒ–äº’æ–¥é‡ */
-    if (G_UART_5.tx_mutex == RT_NULL)
-    {
-        G_UART_5.tx_mutex = rt_mutex_create( "uart5_tx_mutex",  RT_IPC_FLAG_FIFO);
-        if (G_UART_5.tx_mutex == RT_NULL)
-        {
-            return RT_ERROR;
-        }
-    }
+    /* ³õÊ¼»¯ĞÅºÅÁ¿ */
+    G_UART_5.rx_sem = rt_sem_create( "uart5_rx_sem", 0, RT_IPC_FLAG_FIFO);
+
     uart_baud_rate_set(G_UART_5,UART5_DEFAULT_BAUD_RATE);
-    /* è®¾ç½®æ¥æ”¶å›è°ƒå‡½æ•° */
+    /* ÉèÖÃ½ÓÊÕ»Øµ÷º¯Êı */
     rt_device_set_rx_indicate(G_UART_5.serial, uart5_callback);
-    /* ä»¥ä¸­æ–­æ¥æ”¶åŠè½®è¯¢å‘é€æ¨¡å¼æ‰“å¼€ä¸²å£è®¾å¤‡ */
+    /* ÒÔÖĞ¶Ï½ÓÊÕ¼°ÂÖÑ¯·¢ËÍÄ£Ê½´ò¿ª´®¿ÚÉè±¸ */
         rt_device_open(G_UART_5.serial, RT_DEVICE_FLAG_RDWR|RT_DEVICE_FLAG_INT_RX);
-    /* åˆ›å»º serial çº¿ç¨‹ */
-    rt_thread_t thread = rt_thread_create("uart5_thread", uart5_rev_thread, RT_NULL, 2048, 25, 10);
-    /* åˆ›å»ºæˆåŠŸåˆ™å¯åŠ¨çº¿ç¨‹ */
+    /* ´´½¨ serial Ïß³Ì */
+    rt_thread_t thread = rt_thread_create("serial5", uart5_rev_thread, RT_NULL, 2048, 25, 10);
+    /* ´´½¨³É¹¦ÔòÆô¶¯Ïß³Ì */
     if (thread != RT_NULL)
     {
        rt_thread_startup(thread);
@@ -995,8 +839,23 @@ int uart5_init(void)
 
 int uart_init(void)
 {
-
-
+#if defined(USING_UART1)
+    if (G_UART_1.init() == RT_EOK)
+    {
+#if defined(BSP_UART1_RX_USING_DMA)
+        rt_kprintf("uart1 interrupt init successful!\r\n");
+        rt_uprintf(G_UART_1,"uart1 dma init successful!\r\n");
+#else
+        rt_kprintf("uart1 interrupt init successful!\r\n");
+        rt_uprintf(G_UART_1,"uart1 interrupt init successful!\r\n");
+#endif
+    }
+    else
+    {
+        rt_kprintf("uart1  init errorR!\r\n");
+        return RT_ERROR;
+    }
+#endif
 
 #if defined(USING_UART2)
     if (G_UART_2.init() == RT_EOK)
@@ -1011,24 +870,7 @@ int uart_init(void)
     }
     else
     {
-        rt_kprintf("uart2  init errorr!\r\n");
-        return RT_ERROR;
-    }
-#endif
-#if defined(USING_UART1)
-    if (G_UART_1.init() == RT_EOK)
-    {
-#if defined(BSP_UART1_RX_USING_DMA)
-        rt_kprintf("uart1 dma init successful!\r\n");
-        rt_uprintf(G_UART_1,"uart1 dma init successful!\r\n");
-#else
-        rt_kprintf("uart1 interrupt init successful!\r\n");
-        rt_uprintf(G_UART_1,"uart1 interrupt init successful!\r\n");
-#endif
-    }
-    else
-    {
-        rt_kprintf("uart1  init error!\r\n");
+        rt_kprintf("uart2  init errorR!\r\n");
         return RT_ERROR;
     }
 #endif
@@ -1051,7 +893,6 @@ int uart_init(void)
     }
 #endif
 
-
 #if defined(USING_UART4)
     if (G_UART_4.init() == RT_EOK)
     {
@@ -1070,7 +911,7 @@ int uart_init(void)
     }
 #endif
 
-#if defined(USING_UART5)
+#if defined(BSP_USING_UART5)
     if (G_UART_5.init() == RT_EOK)
     {
         rt_kprintf("uart5 interrupt init successful!\r\n");
@@ -1084,7 +925,7 @@ int uart_init(void)
 #endif
     return RT_EOK;
 }
-//INIT_APP_EXPORT(uart_init); /* ä½¿ç”¨ç»„ä»¶è‡ªåŠ¨åˆå§‹åŒ–æœºåˆ¶ */
+//INIT_APP_EXPORT(uart_init); /* Ê¹ÓÃ×é¼ş×Ô¶¯³õÊ¼»¯»úÖÆ */
 
 
 
@@ -1093,9 +934,8 @@ int uart_baud_rate_set(uart_t uart, rt_uint32_t baud_rate)
     RT_ASSERT(uart.serial != RT_NULL);
     RT_ASSERT(baud_rate != RT_NULL);
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-    config.baud_rate = baud_rate;        //ä¿®æ”¹æ³¢ç‰¹ç‡
+    config.baud_rate = baud_rate;        //ĞŞ¸Ä²¨ÌØÂÊ
     rt_device_control(uart.serial, RT_DEVICE_CTRL_CONFIG, &config);
-    return RT_EOK;
 }
 
 
@@ -1123,46 +963,9 @@ int rt_uprintf(uart_t uart,const char *fmt, ...)
     length = rt_vsnprintf(rt_log_buf, sizeof(rt_log_buf) - 1, fmt, args);
     if (length > UART_TX_SIZE - 1)
         length = UART_TX_SIZE - 1;
-    uart.send(rt_log_buf, length);
+    rt_device_write(uart.serial, 0, rt_log_buf, length);
     va_end(args);
-    length = rt_memset(rt_log_buf, 0, length);
     return length;
 }
 RTM_EXPORT(rt_uprintf);
-
-/*å¯»æ‰¾æ•°ç»„aä¸­bçš„é¦–å­—æ¯ä¸‹æ ‡
- * ä¾‹å¦‚aä¸ºABCDEFï¼ŒBä¸ºDEï¼Œåˆ™è¿”å›3
- * é”™è¯¯è¿”å›-1*/
-int find_pos(char *a,char *b)
-{
-    int i,j;
-    for(i=0;a[i]!='\0';i++)
-    {    for(j=0;b[j]!='\0';j++)
-             if(a[i+j]!=b[j])
-                 break;
-         if(b[j]=='\0')
-             break;
-    }
-    if (a[i]!='\0')
-        return i;
-    else
-        return -1;
-}
-
-
-void print_hex(const rt_uint8_t *buf, int len)
-{
-    for(int i=0; i<len; i++)
-    {
-        if(i == len - 1)
-        {
-            rt_kprintf("%02X", buf[i]);
-        }
-        else
-        {
-            rt_kprintf("%02X ", buf[i]);
-        }
-    }
-     rt_kprintf("\r\n");
-}
 

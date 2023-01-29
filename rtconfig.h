@@ -18,7 +18,7 @@
 #define IDLE_THREAD_STACK_SIZE 256
 #define RT_USING_TIMER_SOFT
 #define RT_TIMER_THREAD_PRIO 4
-#define RT_TIMER_THREAD_STACK_SIZE 512
+#define RT_TIMER_THREAD_STACK_SIZE 128
 
 /* kservice optimization */
 
@@ -57,7 +57,7 @@
 
 #define RT_USING_COMPONENTS_INIT
 #define RT_USING_USER_MAIN
-#define RT_MAIN_THREAD_STACK_SIZE 1024
+#define RT_MAIN_THREAD_STACK_SIZE 512
 #define RT_MAIN_THREAD_PRIORITY 10
 
 /* Device Drivers */
@@ -65,7 +65,8 @@
 #define RT_USING_DEVICE_IPC
 #define RT_USING_SERIAL
 #define RT_USING_SERIAL_V1
-#define RT_SERIAL_RB_BUFSZ 256
+#define RT_SERIAL_USING_DMA
+#define RT_SERIAL_RB_BUFSZ 128
 #define RT_USING_PIN
 
 /* Using USB */
@@ -95,19 +96,6 @@
 
 /* Utilities */
 
-#define RT_USING_ULOG
-#define ULOG_OUTPUT_LVL_D
-#define ULOG_OUTPUT_LVL 7
-#define ULOG_ASSERT_ENABLE
-#define ULOG_LINE_BUF_SIZE 128
-
-/* log format */
-
-#define ULOG_OUTPUT_LEVEL
-#define ULOG_OUTPUT_TAG
-#define ULOG_OUTPUT_THREAD_NAME
-/* end of log format */
-#define ULOG_BACKEND_USING_CONSOLE
 /* end of Utilities */
 /* end of RT-Thread Components */
 
