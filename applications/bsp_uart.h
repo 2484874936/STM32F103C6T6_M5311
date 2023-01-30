@@ -19,7 +19,7 @@ typedef struct Uart
     int (*data_processing)(char *,rt_size_t);
 } uart_t;
 
-#define UART_TX_SIZE 512
+#define UART_TX_SIZE 256
 
 //#define USING_UART1
 #define USING_UART2

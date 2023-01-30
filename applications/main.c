@@ -15,12 +15,14 @@
 #include <rtdbg.h>
 #include <myled.h>
 #include "bsp_uart.h"
+#include "app_m5311.h"
 
 int main(void)
 {
 
     uart_init();
     led_init();
+    m5311_moudle_init();
     int count=0;
     easyblink(g_test_led, -1, 100, 500);
     for(;;)
@@ -28,7 +30,7 @@ int main(void)
         count++;
 //        LOG_D("Hello RT-Thread for %d times!",count);
         rt_kprintf("Hello RT-Thread for %d times!\n",count);
-        rt_uprintf(G_UART_2,"Hello RT-Thread for %d times!\n",count);
+        rt_uprintf(G_UART_2,"AT\r\n");
         rt_thread_mdelay(1000);
     }
 

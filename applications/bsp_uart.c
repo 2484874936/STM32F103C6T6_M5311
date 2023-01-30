@@ -356,7 +356,7 @@ int uart2_init(void)
         }
     }
     /* 创建 serial 线程 */
-    rt_thread_t thread = rt_thread_create("serial2", uart2_rev_thread, RT_NULL, 2048, 22, 10);
+    rt_thread_t thread = rt_thread_create("serial2", uart2_rev_thread, RT_NULL, 1024, 22, 10);
     /* 创建成功则启动线程 */
     if (thread != RT_NULL)
     {
