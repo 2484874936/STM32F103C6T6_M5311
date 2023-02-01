@@ -263,8 +263,9 @@ __WEAK int uart2_data_processing(char *buffer, rt_size_t index)
     if(buffer[index-2] == '\r' && buffer[index-1] == '\n')//中断必须要限制才能输出字符串
 #endif
     {
-        rt_uprintf(G_UART_2, "usart2 ");
-        G_UART_2.send(buffer,index);
+        rt_kprintf("%s",buffer);
+//        rt_uprintf(G_UART_2, "usart2 ");
+//        G_UART_2.send(buffer,index);
 //        rt_mb_send(G_UART_2.out_mb, (rt_uint32_t)buffer);
         rt_memset(buffer, 0, index);
         index = 0;
@@ -862,7 +863,7 @@ int uart_init(void)
     {
 #if defined(BSP_UART2_RX_USING_DMA)
         rt_kprintf("uart2 dma init successful!\r\n");
-        rt_uprintf(G_UART_2,"uart2 dma init successful!\r\n");;
+//        rt_uprintf(G_UART_2,"uart2 dma init successful!\r\n");
 #else
         rt_kprintf("uart2 interrupt init successful!\r\n");
         rt_uprintf(G_UART_2,"uart2 interrupt init successful!\r\n");
@@ -870,7 +871,7 @@ int uart_init(void)
     }
     else
     {
-        rt_kprintf("uart2  init errorR!\r\n");
+        rt_kprintf("uart2  init error!\r\n");
         return RT_ERROR;
     }
 #endif

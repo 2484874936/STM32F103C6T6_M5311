@@ -31,7 +31,7 @@ struct M5311_Modle{
     char *keepalive;//keepalive时间
     char *user;//用户名
     char *passwd;//密码
-    char *clead;//是否删除session
+    char *clean;//是否删除session
 
     //AT+MQTTOPEN
     char *usrflag;//该标志位被设置表示一个客户端需使用用户名。
