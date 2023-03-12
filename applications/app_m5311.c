@@ -1,11 +1,13 @@
-/*
+ /*
  * Change Logs:
  * Date           Author       Notes
  * 2023-01-30     afun       the first version
  */
 #include "app_m5311.h"
 #include <string.h>
-
+#define LOG_TAG "M5311"
+#define LOG_LVL LOG_LVL_DBG
+#include "ulog.h"
 
 rt_base_t m5311_wakeup_pin = GET_PIN(A,4);
 rt_base_t m5311_pwr_pin    = GET_PIN(A,5);
@@ -40,9 +42,20 @@ int m5311_moudle_init(void)
     }
     cnt = 0;
 //    while(send_at("OK\r\n",100,1,"ATE1\r\n") != RT_EOK);
-    while(send_at("OK\r\n",100,1,"AT+GSN\r\n") != RT_EOK);//获取IMEI
-    while(send_at("OK\r\n",100,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
+
     while(send_at("OK\r\n",100,1,"ATE0\r\n") != RT_EOK);//ATE0:关闭回显，ATE1:打开回显
+    while(send_at("OK\r\n",100,1,"AT+SM=LOCK_FOREVER\r\n") != RT_EOK);//关闭模组休眠，掉电保持
+    while(send_at("OK\r\n",100,1,"AT+CEDRXS=0,5\r\n") != RT_EOK);//关闭eDXR模式
+    while(send_at("OK\r\n",100,1,"AT+CPSMS=1,,,\"00100010\",\"00101111\"\r\n") != RT_EOK);//使能PSM模式
+
+    while(send_at("OK\r\n",100,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
+    while(send_at("OK\r\n",100,1,"AT+GSN\r\n") != RT_EOK);//获取IMEI
+    while(send_at("+CEREG: 1,5\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
+    {
+        while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
+    }
+    while(send_at("+CGATT: 1\r\n",1000,1,"AT+CGATT?\r\n") != RT_EOK);//获取IMEI
+
     while(send_at("OK\r\n",100,1,"AT+CMSYSCTRL=0,2\r\n") != RT_EOK);
     while(send_at("OK\r\n",100,1,"AT+MQTTPING=0\r\n") != RT_EOK);
     while(send_at("OK\r\n",500,1,"AT+CGPADDR=1\r\n") != RT_EOK)//获取网络IP
@@ -55,15 +68,26 @@ int m5311_moudle_init(void)
         }
     }
     cnt = 0;
+//    AT_command:AT+MQTTCFG="101.69.254.66",1883,"864901060251661",120,"","",1
+//    AT_command:AT+MQTTCFG="101.69.254.66",1883,"864901060251661",120,"","",1
+//    AT_command:AT+MQTTCFG="183.230.40.39",6002,"4069959",60,"725829","IIOu0oFUg1guk20ornTK1uzAcnM=",1
 
-    m5311_modle.mqtt_host = "\"101.69.254.66\"";
-    m5311_modle.mqtt_port = "1883";
-    m5311_modle.mqtt_clientid = IMEI;
-    m5311_modle.keepalive = "120";
-    m5311_modle.user = "\"\"";
-    m5311_modle.passwd = "\"\"";
+
+//    m5311_modle.mqtt_host = "\"101.69.254.66\"";
+//    m5311_modle.mqtt_port = "1883";
+//    m5311_modle.mqtt_clientid = IMEI;
+//    m5311_modle.keepalive = "120";
+//    m5311_modle.user = "\"\"";
+//    m5311_modle.passwd = "\"\"";
+//    m5311_modle.clean= "1";
+    m5311_modle.mqtt_host = "\"183.230.40.39\"";
+    m5311_modle.mqtt_port = "6002";
+    m5311_modle.mqtt_clientid = "\"4069959\"";
+    m5311_modle.keepalive = "60";
+    m5311_modle.user = "\"725829\"";
+    m5311_modle.passwd = "\"IIOu0oFUg1guk20ornTK1uzAcnM=\"";
     m5311_modle.clean= "1";
-    while(send_at("OK\r\n", 100, 15, "AT+MQTTCFG=", m5311_modle.mqtt_host, DOUHAO, \
+    while(send_at("OK\r\n", 1000, 15, "AT+MQTTCFG=", m5311_modle.mqtt_host, DOUHAO, \
                   m5311_modle.mqtt_port, DOUHAO, m5311_modle.mqtt_clientid, DOUHAO, \
                   m5311_modle.keepalive, DOUHAO, m5311_modle.user, DOUHAO, \
                   m5311_modle.passwd, DOUHAO, m5311_modle.clean,"\r\n") != RT_EOK)//连接MQTT
@@ -76,7 +100,6 @@ int m5311_moudle_init(void)
         }
     }
     cnt = 0;
-
    m5311_modle.usrflag = "0";
    m5311_modle.pwdflag = "0";
    m5311_modle.willflag = "0";
@@ -88,11 +111,13 @@ int m5311_moudle_init(void)
                   m5311_modle.pwdflag, DOUHAO, m5311_modle.willflag, DOUHAO, \
                   m5311_modle.willretain, DOUHAO, m5311_modle.willqos, DOUHAO, \
                   m5311_modle.willtopic, DOUHAO, m5311_modle.willmessage,"\r\n") != RT_EOK)//连接MQTT
+//    while(send_at("OK", 100, 1,"AT+MQTTCFG=\"183.230.40.39\”,6002,\”4069959\”,60,\”75829\”,\”IIOu0oFUg1guk20ornTK1uzAcnM=\”,1\r\n") != RT_EOK)//连接MQTT
+
     {
         cnt ++;
         if(cnt == 10)
         {
-            rt_kprintf("mqtt open error!\r\n");
+            LOG_E("mqtt open error!\r\n");
             return RT_ERROR;
         }
     }
@@ -108,7 +133,8 @@ int uart2_data_processing(char *buffer, rt_size_t index)
 #endif
     {
         char *temp;
-        rt_kprintf("uart2 receive:%s",buffer);
+        LOG_D("uart2 receive:%s",buffer);
+
         if(m5311_modle.compare_str != RT_NULL)
         {
            temp = strstr(buffer,m5311_modle.compare_str);
@@ -123,7 +149,7 @@ int uart2_data_processing(char *buffer, rt_size_t index)
                        IMEI[16] = IMEI[0];
                        IMEI[17] = '\0';
                    }
-                   rt_kprintf("IMEI=%s\n",IMEI);
+                   LOG_I("IMEI=%s\n",IMEI);
                }
                rt_mb_send(G_UART_2.out_mb,temp);
            }
@@ -197,7 +223,7 @@ rt_size_t send_at(char *ack, rt_uint32_t timeout, int num, ...)
         }
     }
     va_end(args);
-    rt_kprintf("AT_command:%s",at_send_buf);
+    LOG_D("AT_command:%s",at_send_buf);
     G_UART_2.send(at_send_buf, length);
     if(strstr(ack,DENNGHAO))
     {
@@ -222,7 +248,8 @@ rt_size_t send_at(char *ack, rt_uint32_t timeout, int num, ...)
             rt_kprintf("command [%s] ack error\r\n",at_send_buf);
             return RT_ERROR;
         }
-        else return RT_EOK;
+        else
+            return RT_EOK;
 //        rt_kprintf("A=%s\r\n",m5311_modle.compare_str_location);
     }
     else
