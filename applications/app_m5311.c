@@ -48,13 +48,13 @@ int m5311_moudle_init(void)
     while(send_at("OK\r\n",100,1,"AT+CEDRXS=0,5\r\n") != RT_EOK);//关闭eDXR模式
     while(send_at("OK\r\n",100,1,"AT+CPSMS=1,,,\"00100010\",\"00101111\"\r\n") != RT_EOK);//使能PSM模式
 
-    while(send_at("OK\r\n",100,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
+    while(send_at("OK\r\n",1000,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
     while(send_at("OK\r\n",100,1,"AT+GSN\r\n") != RT_EOK);//获取IMEI
-    while(send_at("+CEREG: 1,5\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
-    {
-        while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
-    }
-    while(send_at("+CGATT: 1\r\n",1000,1,"AT+CGATT?\r\n") != RT_EOK);//获取IMEI
+//    while(send_at("+CEREG: 1,5\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
+//    {
+//        while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
+//    }
+//    while(send_at("+CGATT: 1\r\n",1000,1,"AT+CGATT?\r\n") != RT_EOK);//获取IMEI
 
     while(send_at("OK\r\n",100,1,"AT+CMSYSCTRL=0,2\r\n") != RT_EOK);
     while(send_at("OK\r\n",100,1,"AT+MQTTPING=0\r\n") != RT_EOK);
