@@ -43,27 +43,28 @@ int m5311_moudle_init(void)
     cnt = 0;
 //    while(send_at("OK\r\n",100,1,"ATE1\r\n") != RT_EOK);
 
-    while(send_at("OK\r\n",100,1,"ATE0\r\n") != RT_EOK);//ATE0:关闭回显，ATE1:打开回显
+    while(send_at("OK\r\n",100,1,"ATE1\r\n") != RT_EOK);//ATE0:关闭回显，ATE1:打开回显
     while(send_at("OK\r\n",100,1,"AT+SM=LOCK_FOREVER\r\n") != RT_EOK);//关闭模组休眠，掉电保持
-    while(send_at("OK\r\n",100,1,"AT+CEDRXS=0,5\r\n") != RT_EOK);//关闭eDXR模式
-    while(send_at("OK\r\n",100,1,"AT+CPSMS=1,,,\"00100010\",\"00101111\"\r\n") != RT_EOK);//使能PSM模式
+//    while(send_at("OK\r\n",100,1,"AT+CEDRXS=0,5\r\n") != RT_EOK);//关闭eDXR模式
+//    while(send_at("OK\r\n",100,1,"AT+CPSMS=1,,,\"00100010\",\"00101111\"\r\n") != RT_EOK);//使能PSM模式
 
-    while(send_at("OK\r\n",1000,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
     while(send_at("OK\r\n",100,1,"AT+GSN\r\n") != RT_EOK);//获取IMEI
-//    while(send_at("+CEREG: 1,5\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
-//    {
-//        while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
-//    }
-//    while(send_at("+CGATT: 1\r\n",1000,1,"AT+CGATT?\r\n") != RT_EOK);//获取IMEI
+//    while(send_at("OK\r\n",1000,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
+
+    while(send_at(",1\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
+    {
+        while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
+    }
+    while(send_at("+CGATT: 1\r\n",1000,1,"AT+CGATT?\r\n") != RT_EOK);//确认 PDP 激活状态，1-代表已激活 0-代表未激活
 
     while(send_at("OK\r\n",100,1,"AT+CMSYSCTRL=0,2\r\n") != RT_EOK);
     while(send_at("OK\r\n",100,1,"AT+MQTTPING=0\r\n") != RT_EOK);
-    while(send_at("OK\r\n",500,1,"AT+CGPADDR=1\r\n") != RT_EOK)//获取网络IP
+    while(send_at("+CGPADDR: 1",2000,1,"AT+CGPADDR=1\r\n") != RT_EOK)//获取网络IP
     {
         cnt ++;
         if(cnt ==10)
         {
-            rt_kprintf("get ip timeout\r\n");
+            rt_kprintf("Can't get IP, M5311 havn't connect net\r\n");
             return RT_ETIMEOUT;
         }
     }
@@ -73,32 +74,36 @@ int m5311_moudle_init(void)
 //    AT_command:AT+MQTTCFG="183.230.40.39",6002,"4069959",60,"725829","IIOu0oFUg1guk20ornTK1uzAcnM=",1
 
 
-//    m5311_modle.mqtt_host = "\"101.69.254.66\"";
-//    m5311_modle.mqtt_port = "1883";
-//    m5311_modle.mqtt_clientid = IMEI;
-//    m5311_modle.keepalive = "120";
-//    m5311_modle.user = "\"\"";
-//    m5311_modle.passwd = "\"\"";
-//    m5311_modle.clean= "1";
-    m5311_modle.mqtt_host = "\"183.230.40.39\"";
-    m5311_modle.mqtt_port = "6002";
-    m5311_modle.mqtt_clientid = "\"4069959\"";
-    m5311_modle.keepalive = "60";
-    m5311_modle.user = "\"725829\"";
-    m5311_modle.passwd = "\"IIOu0oFUg1guk20ornTK1uzAcnM=\"";
+    m5311_modle.mqtt_host = "\"101.69.254.66\"";
+    m5311_modle.mqtt_port = "1883";
+    m5311_modle.mqtt_clientid = IMEI;
+    m5311_modle.keepalive = "120";
+    m5311_modle.user = "\"\"";
+    m5311_modle.passwd = "\"\"";
     m5311_modle.clean= "1";
-    while(send_at("OK\r\n", 1000, 15, "AT+MQTTCFG=", m5311_modle.mqtt_host, DOUHAO, \
-                  m5311_modle.mqtt_port, DOUHAO, m5311_modle.mqtt_clientid, DOUHAO, \
-                  m5311_modle.keepalive, DOUHAO, m5311_modle.user, DOUHAO, \
-                  m5311_modle.passwd, DOUHAO, m5311_modle.clean,"\r\n") != RT_EOK)//连接MQTT
-    {
+//    m5311_modle.mqtt_host = "\"183.230.40.39\"";
+//    m5311_modle.mqtt_port = "6002";
+//    m5311_modle.mqtt_clientid = "\"4069959\"";
+//    m5311_modle.keepalive = "60";
+//    m5311_modle.user = "\"725829\"";
+//    m5311_modle.passwd = "\"IIOu0oFUg1guk20ornTK1uzAcnM=\"";
+//    m5311_modle.clean= "1";
+
+
+    do{
+//        send_at("OK\r\n",100,1,"AT+MQTTDEL\r\n");//删除MQTT client配置
+//        send_at("OK\r\n", 1000, 15, "AT+MQTTCFG=", m5311_modle.mqtt_host, DOUHAO, \
+//                          m5311_modle.mqtt_port, DOUHAO, m5311_modle.mqtt_clientid, DOUHAO, \
+//                          m5311_modle.keepalive, DOUHAO, m5311_modle.user, DOUHAO, \
+//                          m5311_modle.passwd, DOUHAO, m5311_modle.clean,"\r\n");//进行MQTT client配置
+        send_at("OK", 1000, 1,"AT+MQTTCFG=\"183.230.40.39\",6002,\"4069959\",60,\"75829\",\"IIOu0oFUg1guk20ornTK1uzAcnM=\",1\r\n");//连接MQTT
         cnt ++;
         if(cnt == 10)
         {
             rt_kprintf("connect mqtt error!\r\n");
             return RT_ERROR;
         }
-    }
+    } while(send_at("+MQTTSTAT: 1\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK);
     cnt = 0;
    m5311_modle.usrflag = "0";
    m5311_modle.pwdflag = "0";
@@ -107,12 +112,10 @@ int m5311_moudle_init(void)
    m5311_modle.willqos = "0";
    m5311_modle.willtopic = "\"\"";
    m5311_modle.willmessage = "\"\"";
-    while(send_at("+MQTTOPEN: OK\r\n", 100, 15, "AT+MQTTOPEN=", m5311_modle.usrflag, DOUHAO, \
+    while(send_at("+MQTTOPEN: OK\r\n", 1000, 15, "AT+MQTTOPEN=", m5311_modle.usrflag, DOUHAO, \
                   m5311_modle.pwdflag, DOUHAO, m5311_modle.willflag, DOUHAO, \
                   m5311_modle.willretain, DOUHAO, m5311_modle.willqos, DOUHAO, \
                   m5311_modle.willtopic, DOUHAO, m5311_modle.willmessage,"\r\n") != RT_EOK)//连接MQTT
-//    while(send_at("OK", 100, 1,"AT+MQTTCFG=\"183.230.40.39\”,6002,\”4069959\”,60,\”75829\”,\”IIOu0oFUg1guk20ornTK1uzAcnM=\”,1\r\n") != RT_EOK)//连接MQTT
-
     {
         cnt ++;
         if(cnt == 10)
