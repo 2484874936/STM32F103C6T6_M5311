@@ -30,10 +30,9 @@ int main(void)
         count++;
 //        LOG_D("Hello RT-Thread for %d times!",count);
 //        rt_kprintf("Hello RT-Thread for %d times!\n",count);
-
+        send_at("OK\r\n",100,1,"AT+MQTTPUB=\"row_led_data\",1,0,0,0,\"HELLOWORLD\"\r\n");
 //        rt_uprintf(G_UART_2,"AT\r\n");
-        rt_thread_mdelay(1000);
+        rt_thread_mdelay(5000);
     }
-
     return RT_EOK;
 }
