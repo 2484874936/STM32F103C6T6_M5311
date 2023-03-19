@@ -30,8 +30,21 @@ int main(void)
         count++;
 //        LOG_D("Hello RT-Thread for %d times!",count);
 //        rt_kprintf("Hello RT-Thread for %d times!\n",count);
-        send_at("OK\r\n",100,1,"AT+MQTTPUB=\"row_led_data\",1,0,0,0,\"HELLOWORLD\"\r\n");
+//        send_at("OK\r\n",100,1,"AT+MQTTPUB=\"row_led_data\",1,0,0,0,\"HELLOWORLD\"\r\n");
 //        rt_uprintf(G_UART_2,"AT\r\n");
+        if(send_at("+MQTTSTAT: 5\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
+        {
+            LOG_W("MQTT RECONNECTING...\n");
+            if(m5311_moudle_init() != RT_EOK)
+            {
+                LOG_E("MQTT RECONNECT ERROR\n");
+            }
+            else
+            {
+                LOG_E("MQTT RECONNECT SUCCESS\n");
+            }
+        }
+        set_led();
         rt_thread_mdelay(5000);
     }
     return RT_EOK;

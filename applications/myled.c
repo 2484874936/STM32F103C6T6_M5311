@@ -57,3 +57,62 @@ int led_init(void)
 }
 //INIT_APP_EXPORT(led_init);
 
+bits32_u g_rowled_data;
+void set_led(void)
+{
+    if(g_rowled_data.bit.bit0) eb_led_on(g_led1);
+    else                       eb_led_off(g_led1);
+
+    if(g_rowled_data.bit.bit1) eb_led_on(g_led2);
+    else                       eb_led_off(g_led2);
+
+    if(g_rowled_data.bit.bit2) eb_led_on(g_led3);
+    else                       eb_led_off(g_led3);
+
+    if(g_rowled_data.bit.bit3) eb_led_on(g_led4);
+    else                       eb_led_off(g_led4);
+
+    if(g_rowled_data.bit.bit4) eb_led_on(g_led5);
+    else                       eb_led_off(g_led5);
+
+    if(g_rowled_data.bit.bit5) eb_led_on(g_led6);
+    else                       eb_led_off(g_led6);
+
+    if(g_rowled_data.bit.bit6) eb_led_on(g_led7);
+    else                       eb_led_off(g_led7);
+
+    if(g_rowled_data.bit.bit7) eb_led_on(g_led8);
+    else                       eb_led_off(g_led8);
+
+    if(g_rowled_data.bit.bit8) eb_led_on(g_led9);
+    else                       eb_led_off(g_led9);
+
+    if(g_rowled_data.bit.bit9) eb_led_on(g_led10);
+    else                       eb_led_off(g_led10);
+
+    if(g_rowled_data.bit.bit10) eb_led_on(g_led11);
+    else                        eb_led_off(g_led11);
+
+    if(g_rowled_data.bit.bit11) eb_led_on(g_led12);
+    else                        eb_led_off(g_led12);
+
+    if(g_rowled_data.bit.bit12) eb_led_on(g_led13);
+    else                        eb_led_off(g_led13);
+
+    if(g_rowled_data.bit.bit13) eb_led_on(g_led14);
+    else                        eb_led_off(g_led14);
+
+    if(g_rowled_data.bit.bit14) eb_led_on(g_led15);
+    else                        eb_led_off(g_led15);
+
+    if(g_rowled_data.bit.bit15) eb_led_on(g_led16);
+    else                        eb_led_off(g_led16);
+
+    if(g_rowled_data.bit.bit16)  eb_led_on(g_led17);
+    else                        eb_led_off(g_led17);
+
+    if(g_rowled_data.bit.bit17) eb_led_on(g_led18);
+    else                        eb_led_off(g_led18);
+
+}
+

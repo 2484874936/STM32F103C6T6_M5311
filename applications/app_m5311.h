@@ -63,6 +63,9 @@ struct M5311_Modle{
 };
 
 
+
+
 int m5311_moudle_init(void);
+int MQTT_connect(void);
 rt_size_t send_at(char *ack, rt_uint32_t timeout, int num, ...);
 #endif /* APPLICATIONS_APP_M5311_H_ */
