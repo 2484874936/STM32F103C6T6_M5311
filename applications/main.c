@@ -34,14 +34,14 @@ int main(void)
 //        rt_uprintf(G_UART_2,"AT\r\n");
         if(send_at("+MQTTSTAT: 5\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
         {
-            LOG_W("MQTT RECONNECTING...\n");
+            LOG_W("MQTT RECONNECTING...");
             if(m5311_moudle_init() != RT_EOK)
             {
-                LOG_E("MQTT RECONNECT ERROR\n");
+                LOG_E("MQTT RECONNECT ERROR");
             }
             else
             {
-                LOG_E("MQTT RECONNECT SUCCESS\n");
+                LOG_E("MQTT RECONNECT SUCCESS");
             }
         }
         set_led();

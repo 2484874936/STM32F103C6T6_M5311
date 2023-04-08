@@ -61,7 +61,7 @@ bits32_u g_rowled_data;
 void set_led(void)
 {
     if(g_rowled_data.bit.bit0) eb_led_on(g_led1);
-    else                       eb_led_off(g_led1);
+    else                       easyblink(g_led1,-1,100,1000);//eb_led_off(g_led1);
 
     if(g_rowled_data.bit.bit1) eb_led_on(g_led2);
     else                       eb_led_off(g_led2);

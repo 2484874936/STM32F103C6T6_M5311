@@ -20,6 +20,7 @@
 #define DOUHAO ","
 #define DENNGHAO "="
 
+
 struct M5311_Modle{
     char *compare_str_location;//被查询字符串首次出现的地址
     char *compare_str;//被查询字符串

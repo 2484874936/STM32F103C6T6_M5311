@@ -68,7 +68,7 @@ int m5311_moudle_init(void)
     while(send_at("OK\r\n",100,1,"AT+MQTTPING=1\r\n") != RT_EOK);
 //    send_at("OK\r\n",100,1,"AT+MQTTPING?\r\n");
 
-    MQTT_connect();
+    return MQTT_connect();
 
 }
 
@@ -94,8 +94,8 @@ int MQTT_connect(void)
     //    m5311_modle.user = "\"\"";
     //    m5311_modle.passwd = "\"\"";
     //    m5311_modle.clean= "1";
-    m5311_modle.mqtt_host = "\"zz.zcczcc.com\"";
-    m5311_modle.mqtt_port = "9004";
+    m5311_modle.mqtt_host = "\"jinchanhb.com\"";
+    m5311_modle.mqtt_port = "19003";
     m5311_modle.mqtt_clientid = IMEI;
     m5311_modle.keepalive = "120";
     m5311_modle.user = "\"\"";
@@ -134,10 +134,10 @@ int MQTT_connect(void)
        cnt ++;
        if(cnt == 10)
        {
-           LOG_E("mqtt open error!\r\n");
+           LOG_E("mqtt open error!");
            return RT_ERROR;
        }
-    } while(send_at("+MQTTSTAT: 5\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若MQTT服务器未连接
+    } while(send_at("+MQTTSTAT: 5",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若MQTT服务器未连接
     cnt = 0;
     send_at("OK\r\n",100,3,"AT+MQTTSUB=",IMEI,",1\r\n");
     return RT_EOK;
@@ -177,33 +177,54 @@ int uart2_data_processing(char *buffer, rt_size_t index)
                    urctopiccompare[17] = '6';
                    urctopiccompare[18] = '\0';
                    LOG_I("IMEI=%s\n",IMEI);
-                   LOG_I("urctopiccompare=%s\n",urctopiccompare);
+                   LOG_I("urctopiccompare=%s",urctopiccompare);
                }
                rt_mb_send(G_UART_2.out_mb,temp);
            }
         }
 
-        if(strstr(buffer,"+MQTTPUBLISH:"))
+        if(rt_strstr(buffer,"+MQTTPUBLISH:"))
         {
             uint8_t Calibration=0;
             uint16_t location=0;
-           rt_kprintf("+MQTTPUBLISH: location = %d\n",location-(uint16_t)buffer);
-            location = strstr(buffer,urctopiccompare) - (uint16_t)buffer;
+//           rt_kprintf("+MQTTPUBLISH: location = %d\n",location-(uint16_t)buffer);
+            location = rt_strstr(buffer,urctopiccompare) - (uint16_t)buffer;
             if(location>0)
             {
-                rt_kprintf("%s location = %d\n",urctopiccompare,location);
+                LOG_I("%s location = %d\n",urctopiccompare,location);
                 for(uint8_t i = location+19; i < location+19+5; i ++)
                 {
-                    rt_kprintf("buffer[%d] = 0x%02x\n",i,buffer[i]);
+                    LOG_I("buffer[%d] = 0x%02x\n",i,buffer[i]);
                     Calibration ^= buffer[i];
                 }
-                rt_kprintf("buffer[%d] = 0x%02x\n",location+19+5,buffer[location+19+5]);
+                LOG_I("buffer[%d] = 0x%02x\n",location+19+5,buffer[location+19+5]);
                 if(Calibration == buffer[location+19+5])
                 {
                     g_rowled_data.word32 = buffer[location+19+2] | buffer[location+19+3] | buffer[location+19+4];
-                    rt_kprintf("Calibration success,g_rowled_data=0x%06X\n",g_rowled_data.word32);
+                    LOG_I("Calibration success,g_rowled_data=0x%06X\n",g_rowled_data.word32);
                 }
                 }
+        }
+        if(rt_strstr(buffer,"+MQTTSTAT: "))
+        {
+            rt_uint8_t m_index = 0;
+            m_index = rt_strstr(buffer,"+MQTTSTAT: ") - buffer + 11 ;
+//            if(m_index > 0)
+//            {
+//                LOG_W("BUFFER[%d] = %x",m_index,buffer[m_index]);
+//            }
+            switch(buffer[m_index])
+            {
+                case '0': LOG_E("Client parameter is not initialized"); break;
+                case '1': LOG_I("Client parameter is initialized"); break;
+                case '2': LOG_I("MQTT server is disconnnected"); break;
+                case '3': LOG_I("Send a connect packet and wait for the MQTT receiving server to ack."); break;
+                case '4': LOG_I("Reconnecting to MQTT server"); break;
+                case '5': LOG_I("MQTT server is connnected"); break;
+//                case '6': LOG_I("In establishing a TCP connection"); break;
+//                case '7': LOG_I("TCP connection is established"); break;
+                default:break;
+            }
         }
         rt_memset(buffer, 0, index);
         index = 0;
