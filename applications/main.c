@@ -10,9 +10,9 @@
 
 #include <rtthread.h>
 
-#define DBG_TAG "main"
-#define DBG_LVL DBG_LOG
-#include <rtdbg.h>
+//#define DBG_TAG "main"
+//#define DBG_LVL DBG_LOG
+//#include <rtdbg.h>
 #include <myled.h>
 #include "bsp_uart.h"
 #include "app_m5311.h"
@@ -34,16 +34,35 @@ int main(void)
 //        rt_uprintf(G_UART_2,"AT\r\n");
         if(send_at("+MQTTSTAT: 5\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
         {
-            LOG_W("MQTT RECONNECTING...");
+            rt_kprintf("MQTT RECONNECTING...\n");
             if(m5311_moudle_init() != RT_EOK)
             {
-                LOG_E("MQTT RECONNECT ERROR");
+                rt_kprintf("MQTT RECONNECT ERROR\n");
             }
             else
             {
-                LOG_E("MQTT RECONNECT SUCCESS");
+                rt_kprintf("MQTT RECONNECT SUCCESS\n");
             }
         }
+//        g_rowled_data1_16.bits.bits0 = 2;
+//        g_rowled_data1_16.bits.bits1 = 2;
+//        g_rowled_data1_16.bits.bits2 = 2;
+//        g_rowled_data1_16.bits.bits3 = 2;
+//        g_rowled_data1_16.bits.bits4 = 2;
+//        g_rowled_data1_16.bits.bits5 = 2;
+//        g_rowled_data1_16.bits.bits6 = 2;
+//        g_rowled_data1_16.bits.bits7 = 2;
+//        g_rowled_data1_16.bits.bits8 = 2;
+//        g_rowled_data1_16.bits.bits9 = 2;
+//        g_rowled_data1_16.bits.bits10 = 2;
+//        g_rowled_data1_16.bits.bits11 = 2;
+//        g_rowled_data1_16.bits.bits12 = 2;
+//        g_rowled_data1_16.bits.bits13 = 2;
+//        g_rowled_data1_16.bits.bits14 = 2;
+//        g_rowled_data1_16.bits.bits15 = 2;
+//        g_rowled_data17_18.bits.bits0 = 2;
+//        g_rowled_data17_18.bits.bits1 = 2;
+//        rt_kprintf("g_rowled_data1_16=0x%08X\g_rowled_data17_18=0x%08X\n",g_rowled_data1_16.word32,g_rowled_data17_18.word32);
         set_led();
         rt_thread_mdelay(5000);
     }
