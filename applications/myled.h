@@ -12,6 +12,8 @@
 #include <drv_common.h>
 #include "easyblink.h"
 
+
+
 extern ebled_t g_test_led;
 extern ebled_t g_led1;
 extern ebled_t g_led2;
@@ -35,47 +37,33 @@ extern ebled_t g_led18;
 
 typedef struct
 {
-  uint32_t bit0 : 1;
-  uint32_t bit1 : 1;
-  uint32_t bit2 : 1;
-  uint32_t bit3 : 1;
-  uint32_t bit4 : 1;
-  uint32_t bit5 : 1;
-  uint32_t bit6 : 1;
-  uint32_t bit7 : 1;
-  uint32_t bit8 : 1;
-  uint32_t bit9 : 1;
-  uint32_t bit10 : 1;
-  uint32_t bit11 : 1;
-  uint32_t bit12 : 1;
-  uint32_t bit13 : 1;
-  uint32_t bit14 : 1;
-  uint32_t bit15 : 1;
-  uint32_t bit16 : 1;
-  uint32_t bit17 : 1;
-  uint32_t bit18 : 1;
-  uint32_t bit19 : 1;
-  uint32_t bit20 : 1;
-  uint32_t bit21 : 1;
-  uint32_t bit22 : 1;
-  uint32_t bit23 : 1;
-  uint32_t bit24 : 1;
-  uint32_t bit25 : 1;
-  uint32_t bit26 : 1;
-  uint32_t bit27 : 1;
-  uint32_t bit28 : 1;
-  uint32_t bit29 : 1;
-  uint32_t bit30 : 1;
-  uint32_t bit31 : 1;
+  rt_uint32_t bits0 : 2;
+  rt_uint32_t bits1 : 2;
+  rt_uint32_t bits2 : 2;
+  rt_uint32_t bits3 : 2;
+  rt_uint32_t bits4 : 2;
+  rt_uint32_t bits5 : 2;
+  rt_uint32_t bits6 : 2;
+  rt_uint32_t bits7 : 2;
+  rt_uint32_t bits8 : 2;
+  rt_uint32_t bits9 : 2;
+  rt_uint32_t bits10 : 2;
+  rt_uint32_t bits11 : 2;
+  rt_uint32_t bits12 : 2;
+  rt_uint32_t bits13 : 2;
+  rt_uint32_t bits14 : 2;
+  rt_uint32_t bits15 : 2;
 } bits32_t;
 typedef union
 {
-  uint32_t word32;
-  bits32_t bit;
+
+  bits32_t bits;
+  rt_uint32_t word32;
 }bits32_u;
 
 
-extern bits32_u g_rowled_data;
+extern bits32_u g_rowled_data1_16;
+extern bits32_u g_rowled_data17_18;
 void set_led(void);
 int led_init(void);
 #endif /* APPLICATIONS_MYLED_H_ */
