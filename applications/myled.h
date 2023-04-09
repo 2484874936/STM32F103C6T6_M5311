@@ -14,7 +14,7 @@
 
 
 
-extern ebled_t g_test_led;
+//extern ebled_t g_test_led;
 extern ebled_t g_led1;
 extern ebled_t g_led2;
 extern ebled_t g_led3;

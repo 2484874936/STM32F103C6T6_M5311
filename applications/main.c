@@ -24,7 +24,7 @@ int main(void)
     led_init();
     m5311_moudle_init();
     int count=0;
-    easyblink(g_test_led, -1, 100, 500);
+//    easyblink(g_test_led, -1, 100, 500);
     for(;;)
     {
         count++;

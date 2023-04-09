@@ -183,7 +183,7 @@
 
 /* end of Kendryte SDK */
 #define PKG_USING_EASYBLINK
-#define PKG_EASYBLINK_MAX_LED_NUMS 18
+#define PKG_EASYBLINK_MAX_LED_NUMS 20
 #define PKG_USING_EASYBLINK_V201
 /* end of peripheral libraries and drivers */
 

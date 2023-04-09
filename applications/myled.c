@@ -12,7 +12,7 @@
 #include <myled.h>
 
 
-ebled_t g_test_led = RT_NULL;
+//ebled_t g_test_led = RT_NULL;
 ebled_t g_led1 = RT_NULL;
 ebled_t g_led2 = RT_NULL;
 ebled_t g_led3 = RT_NULL;
@@ -36,7 +36,7 @@ bits32_u g_rowled_data1_16;
 bits32_u g_rowled_data17_18;
 int led_init(void)
 {
-    g_test_led = easyblink_init_led(GET_PIN(C,13), PIN_HIGH);
+//    g_test_led = easyblink_init_led(GET_PIN(C,13), PIN_HIGH);
     g_led1 = easyblink_init_led(GET_PIN(B,0), PIN_HIGH);
     g_led2 = easyblink_init_led(GET_PIN(B,1), PIN_HIGH);
     g_led3 = easyblink_init_led(GET_PIN(B,2), PIN_HIGH);
