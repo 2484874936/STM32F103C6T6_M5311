@@ -32,7 +32,7 @@ int main(void)
 //        rt_kprintf("Hello RT-Thread for %d times!\n",count);
 //        send_at("OK\r\n",100,1,"AT+MQTTPUB=\"row_led_data\",1,0,0,0,\"HELLOWORLD\"\r\n");
 //        rt_uprintf(G_UART_2,"AT\r\n");
-        if(send_at("+MQTTSTAT: 5\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
+        if(send_at("STAT: 5\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
         {
             rt_kprintf("MQTT RECONNECTING...\n");
             if(m5311_moudle_init() != RT_EOK)
@@ -64,7 +64,7 @@ int main(void)
 //        g_rowled_data17_18.bits.bits1 = 2;
 //        rt_kprintf("g_rowled_data1_16=0x%08X\g_rowled_data17_18=0x%08X\n",g_rowled_data1_16.word32,g_rowled_data17_18.word32);
         set_led();
-        rt_thread_mdelay(5000);
+        rt_thread_mdelay(900);
     }
     return RT_EOK;
 }

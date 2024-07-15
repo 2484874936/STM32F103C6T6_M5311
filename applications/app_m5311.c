@@ -37,6 +37,9 @@ int m5311_moudle_init(void)
     rt_pin_write(um5311_reset_pin, PIN_HIGH);
     m5311_pwron();
     m5311_reset();
+    g_rowled_data1_16.word32 = 0;
+    g_rowled_data17_18.word32 = 0;
+    set_led();
     easyblink(g_led1,-1,200,400);
     while(send_at("OK",500,1,"AT\r\n") != RT_EOK);//等待模组正常
     {
@@ -46,8 +49,14 @@ int m5311_moudle_init(void)
             return RT_ERROR;
         }
     }
+    send_at("OK",500,1,"AT*CMBAND=?\r\n");//查看模组使能频段
+    send_at("OK",500,1,"AT+CGCONTRDP\r\n");//查看模组使能频段
+    send_at("OK",500,1,"AT+CFUN=1\r\n");
+//    send_at("OK",500,1,"AT+CLPLMN\r\n");//清除驻网记录
+    rt_thread_mdelay(5000);
     easyblink_stop(g_led1);
     eb_led_on(g_led1);
+
     easyblink(g_led2,-1,200,400);
     cnt = 0;
 //    while(send_at("OK\r\n",100,1,"ATE1\r\n") != RT_EOK);
@@ -64,11 +73,14 @@ int m5311_moudle_init(void)
     eb_led_on(g_led2);
     easyblink(g_led3,-1,200,400);
     while(send_at("OK\r\n",1000,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
+    while(send_at("OK\r\n",1000,1,"AT+SWVER\r\n") != RT_EOK);
+    while(send_at("OK\r\n",1000,1,"AT+CMVER\r\n") != RT_EOK);
     easyblink_stop(g_led3);
     eb_led_on(g_led3);
     easyblink(g_led4,-1,200,400);
     while(send_at(",1\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
     {
+        send_at("\r\n",1000,1,"AT+CPIN?\r\n");
         while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
     }
     easyblink_stop(g_led4);
@@ -116,14 +128,17 @@ int MQTT_connect(void)
     //    m5311_modle.user = "\"\"";
     //    m5311_modle.passwd = "\"\"";
     //    m5311_modle.clean= "1";
-    m5311_modle.mqtt_host = "\"jinchanhb.com\"";
+    m5311_modle.mqtt_host = "\"jinchanhb.com\"";//正式服务器
     m5311_modle.mqtt_port = "19003";
+//    m5311_modle.mqtt_host = "\"zz.zcczcc.com\"";//测试服务器
+//    m5311_modle.mqtt_port = "9004";
     m5311_modle.mqtt_clientid = IMEI;
     m5311_modle.keepalive = "120";
     m5311_modle.user = "\"\"";
     m5311_modle.passwd = "\"\"";
     m5311_modle.clean= "1";
     do{
+//        send_at("OK\r\n", 1000, 1,"AT+MQTTCFG=\"mqtts.heclouds.com\",1883,\"ML307Atest\",60,\"4C9H7yA5Td\",\"version=2018-10-31&res=products%2F4C9H7yA5Td&et=3035001667&method=md5&sign=Nwdp4I3qLHyCcqylshWRxw%3D%3D\",1\r\n");
        send_at("OK\r\n", 1000, 15, "AT+MQTTCFG=", m5311_modle.mqtt_host, DOUHAO, \
                          m5311_modle.mqtt_port, DOUHAO, m5311_modle.mqtt_clientid, DOUHAO, \
                          m5311_modle.keepalive, DOUHAO, m5311_modle.user, DOUHAO, \
@@ -146,11 +161,12 @@ int MQTT_connect(void)
     m5311_modle.pwdflag = "0";
     m5311_modle.willflag = "0";
     m5311_modle.willretain = "0";
-    m5311_modle.willqos = "0";
+    m5311_modle.willqos = "1";
     m5311_modle.willtopic = "\"\"";
     m5311_modle.willmessage = "\"\"";
 
     do{
+//        send_at("+MQTTOPEN: OK\r\n", 1000, 1,"AT+MQTTOPEN=1,1,0,0,0,\"\",\"\"\r\n");
     send_at("+MQTTOPEN: OK\r\n", 1000, 15, "AT+MQTTOPEN=", m5311_modle.usrflag, DOUHAO, \
                  m5311_modle.pwdflag, DOUHAO, m5311_modle.willflag, DOUHAO, \
                  m5311_modle.willretain, DOUHAO, m5311_modle.willqos, DOUHAO, \
@@ -158,7 +174,7 @@ int MQTT_connect(void)
        cnt ++;
        if(cnt == 10)
        {
-           rt_kprintf("mqtt open error!\n");
+           rt_kprintf("mqtt open error for %d times!\n",cnt);
            return RT_ERROR;
        }
     } while(send_at("+MQTTSTAT: 5",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若MQTT服务器未连接
