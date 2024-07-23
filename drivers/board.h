@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2023, RT-Thread Development Team
+ * Copyright (c) 2006-2024, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Change Logs:
  * Date           Author       Notes
- * 2023-01-16     RealThread   first version
+ * 2024-07-23     RealThread   first version
  */
 
 #ifndef __BOARD_H__
@@ -23,18 +23,18 @@ extern "C"
 
 #define CHIP_FAMILY_STM32
 #define CHIP_SERIES_STM32F1
-#define CHIP_NAME_STM32F103C6
+#define CHIP_NAME_STM32F103C8
 
 /*-------------------------- CHIP CONFIG END --------------------------*/
 
 /*-------------------------- ROM/RAM CONFIG BEGIN --------------------------*/
 
 #define ROM_START              ((uint32_t)0x08000000)
-#define ROM_SIZE               (32 * 1024)
+#define ROM_SIZE               (64 * 1024)
 #define ROM_END                ((uint32_t)(ROM_START + ROM_SIZE))
 
 #define RAM_START              (0x20000000)
-#define RAM_SIZE               (10 * 1024)
+#define RAM_SIZE               (20 * 1024)
 #define RAM_END                (RAM_START + RAM_SIZE)
 
 /*-------------------------- ROM/RAM CONFIG END --------------------------*/

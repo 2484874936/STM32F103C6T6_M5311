@@ -1,12 +1,12 @@
 /*
- * linker script for STM32F103C6 with GNU ld
+ * linker script for STM32F103C8 with GNU ld
  */
 
 /* Program Entry, set to mark it as "used" and avoid gc */
 MEMORY
 {
-ROM (rx) : ORIGIN =0x08000000,LENGTH =32k
-RAM (rw) : ORIGIN =0x20000000,LENGTH =10k
+    ROM (rx) : ORIGIN = 0x08000000, LENGTH =  64k /* 64K flash */
+    RAM (rw) : ORIGIN = 0x20000000, LENGTH =  20k /* 20K sram */
 }
 ENTRY(Reset_Handler)
 _system_stack_size = 0x400;
