@@ -22,7 +22,7 @@ int main(void)
 
     uart_init();
     led_init();
-    m5311_moudle_init();
+    m5311_moudle_init(INIT_BLINK_LED);
     int count=0;
 //    easyblink(g_test_led, -1, 100, 500);
     for(;;)
@@ -35,7 +35,7 @@ int main(void)
         if(send_at("STAT: 5\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
         {
             rt_kprintf("MQTT RECONNECTING...\n");
-            if(m5311_moudle_init() != RT_EOK)
+            if(m5311_moudle_init(REINIT_BLINK_LED) != RT_EOK)
             {
                 rt_kprintf("MQTT RECONNECT ERROR\n");
             }

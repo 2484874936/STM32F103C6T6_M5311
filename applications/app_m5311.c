@@ -26,7 +26,7 @@ void m5311_pwroff(void);
 void m5311_reset(void);
 rt_size_t send_at(char *ack, rt_uint32_t timeout, int num, ...);
 
-int m5311_moudle_init(void)
+int m5311_moudle_init(_Bool init_flag)
 {
     rt_uint8_t cnt = 0;
     rt_pin_mode( m5311_wakeup_pin, PIN_MODE_OUTPUT);
@@ -37,10 +37,13 @@ int m5311_moudle_init(void)
     rt_pin_write(um5311_reset_pin, PIN_HIGH);
     m5311_pwron();
     m5311_reset();
-    g_rowled_data1_16.word32 = 0;
-    g_rowled_data17_18.word32 = 0;
-    set_led();
-    easyblink(g_led1,-1,200,400);
+    if(init_flag)
+    {
+        g_rowled_data1_16.word32 = 0;
+        g_rowled_data17_18.word32 = 0;
+        set_led();
+        easyblink(g_led1,-1,200,400);
+    }
     while(send_at("OK",500,1,"AT\r\n") != RT_EOK);//等待模组正常
     {
         cnt ++;
@@ -54,10 +57,12 @@ int m5311_moudle_init(void)
     send_at("OK",500,1,"AT+CFUN=1\r\n");
 //    send_at("OK",500,1,"AT+CLPLMN\r\n");//清除驻网记录
     rt_thread_mdelay(5000);
-    easyblink_stop(g_led1);
-    eb_led_on(g_led1);
-
-    easyblink(g_led2,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led1);
+        eb_led_on(g_led1);
+        easyblink(g_led2,-1,200,400);
+    }
     cnt = 0;
 //    while(send_at("OK\r\n",100,1,"ATE1\r\n") != RT_EOK);
 
@@ -69,41 +74,59 @@ int m5311_moudle_init(void)
     get_IMEI_flag = 1;
     while(send_at("86",100,1,"AT+GSN\r\n") != RT_EOK);//获取IMEI
     get_IMEI_flag = 0;
-    easyblink_stop(g_led2);
-    eb_led_on(g_led2);
-    easyblink(g_led3,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led2);
+        eb_led_on(g_led2);
+        easyblink(g_led3,-1,200,400);
+    }
     while(send_at("OK\r\n",1000,1,"AT+CIMI\r\n") != RT_EOK);//读SIM卡正常，获取IMSI
     while(send_at("OK\r\n",1000,1,"AT+SWVER\r\n") != RT_EOK);
     while(send_at("OK\r\n",1000,1,"AT+CMVER\r\n") != RT_EOK);
-    easyblink_stop(g_led3);
-    eb_led_on(g_led3);
-    easyblink(g_led4,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led3);
+        eb_led_on(g_led3);
+        easyblink(g_led4,-1,200,400);
+    }
     while(send_at(",1\r\n",1000,1,"AT+CEREG?\r\n") != RT_EOK)//确认基站注册状态，1-代表本地已注册上， 5-代表漫游已注册上
     {
         send_at("\r\n",1000,1,"AT+CPIN?\r\n");
         while(send_at("OK\r\n",1000,1,"AT+CEREG=1\r\n") != RT_EOK);
     }
-    easyblink_stop(g_led4);
-    eb_led_on(g_led4);
-    easyblink(g_led5,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led4);
+        eb_led_on(g_led4);
+        easyblink(g_led5,-1,200,400);
+    }
     while(send_at("+CGATT: 1\r\n",1000,1,"AT+CGATT?\r\n") != RT_EOK);//确认 PDP 激活状态，1-代表已激活 0-代表未激活
-    easyblink_stop(g_led5);
-    eb_led_on(g_led5);
-    easyblink(g_led6,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led5);
+        eb_led_on(g_led5);
+        easyblink(g_led6,-1,200,400);
+    }
     while(send_at("OK\r\n",100,1,"AT+CMSYSCTRL=0,2\r\n") != RT_EOK);
-    easyblink_stop(g_led6);
-    eb_led_on(g_led6);
-    easyblink(g_led7,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led6);
+        eb_led_on(g_led6);
+        easyblink(g_led7,-1,200,400);
+    }
     while(send_at("OK\r\n",100,1,"AT+MQTTPING=1\r\n") != RT_EOK);
 //    send_at("OK\r\n",100,1,"AT+MQTTPING?\r\n");
-    easyblink_stop(g_led7);
-    eb_led_on(g_led7);
-    easyblink(g_led8,-1,200,400);
-    return MQTT_connect();
+    if(init_flag)
+    {
+        easyblink_stop(g_led7);
+        eb_led_on(g_led7);
+        easyblink(g_led8,-1,200,400);
+    }
+    return MQTT_connect(init_flag);
 
 }
 
-int MQTT_connect(void)
+int MQTT_connect(_Bool init_flag)
 {
     rt_uint8_t cnt = 0;
     while(send_at("+CGPADDR: 1",2000,1,"AT+CGPADDR=1\r\n") != RT_EOK)//获取网络IP
@@ -116,9 +139,12 @@ int MQTT_connect(void)
        }
     }
     cnt = 0;
-    easyblink_stop(g_led8);
-    eb_led_on(g_led8);
-    easyblink(g_led9,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led8);
+        eb_led_on(g_led8);
+        easyblink(g_led9,-1,200,400);
+    }
     send_at("OK\r\n",100,1,"AT+MQTTDISC\r\n");//断开MQTT连接
     send_at("OK\r\n",100,1,"AT+MQTTDEL\r\n");//删除MQTT client配置
     //    m5311_modle.mqtt_host = "\"101.69.254.66\"";
@@ -153,9 +179,12 @@ int MQTT_connect(void)
        }
     } while(send_at("+MQTTSTAT: 1\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若client参数未初始化
     cnt = 0;
-    easyblink_stop(g_led9);
-    eb_led_on(g_led9);
-    easyblink(g_led10,-1,200,400);
+    if(init_flag)
+    {
+        easyblink_stop(g_led9);
+        eb_led_on(g_led9);
+        easyblink(g_led10,-1,200,400);
+    }
 
     m5311_modle.usrflag = "0";
     m5311_modle.pwdflag = "0";
@@ -179,8 +208,11 @@ int MQTT_connect(void)
        }
     } while(send_at("+MQTTSTAT: 5",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若MQTT服务器未连接
     cnt = 0;
-    easyblink_stop(g_led10);
-    eb_led_on(g_led10);
+    if(init_flag)
+    {
+        easyblink_stop(g_led10);
+        eb_led_on(g_led10);
+    }
     send_at("OK\r\n",100,3,"AT+MQTTSUB=",IMEI,",1\r\n");
     g_rowled_data1_16.word32 = 0xffffffff;
     g_rowled_data17_18.word32 = 0x0000000f;
