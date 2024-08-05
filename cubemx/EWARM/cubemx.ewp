@@ -78,7 +78,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>STM32F103C6	ST STM32F103C6</state>
+          <state>STM32F103C8	ST STM32F103C8</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -225,7 +225,7 @@
         <option>
           <name>CCDefines</name>
           <state>USE_HAL_DRIVER</state>
-          <state>STM32F103x6</state>
+          <state>STM32F103xB</state>
           <state></state>
         </option>
         <option>
@@ -774,7 +774,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$/stm32f103x6_flash.icf</state>
+          <state>$PROJ_DIR$/stm32f103xb_flash.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -1052,19 +1052,58 @@
     <group>
       <name>EWARM</name>
       <file>
-        <name>$PROJ_DIR$/startup_stm32f103x6.s</name>
+        <name>$PROJ_DIR$/startup_stm32f103xb.s</name>
       </file>
     </group>
     <group>
       <name>User</name>
+      <group>
+        <name>D:</name>
+        <group>
+          <name>workplace_RT</name>
+          <group>
+            <name>zsp-001</name>
+            <group>
+              <name>cubemx</name>
+              <file>
+                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/main.c</name>
+              </file>
+              <file>
+                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/gpio.c</name>
+              </file>
+              <file>
+                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/dma.c</name>
+              </file>
+              <file>
+                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/usart.c</name>
+              </file>
+              <file>
+                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_it.c</name>
+              </file>
+              <file>
+                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_hal_msp.c</name>
+              </file>
+            </group>
+          </group>
+        </group>
+      </group>
       <file>
-        <name>$PROJ_DIR$/../Src/main.c</name>
+        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/main.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../Src/stm32f1xx_it.c</name>
+        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/gpio.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../Src/stm32f1xx_hal_msp.c</name>
+        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/dma.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/usart.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_it.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_hal_msp.c</name>
       </file>
     </group>
   </group>
@@ -1076,7 +1115,13 @@
         <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_iwdg.c</name>
+        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_uart.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c</name>
@@ -1107,15 +1152,6 @@
       </file>
       <file>
         <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$/../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_uart.c</name>
       </file>
     </group>
     <group>

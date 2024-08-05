@@ -151,7 +151,7 @@ int MQTT_connect(void)
            rt_kprintf("connect mqtt error!\n");
            return RT_ERROR;
        }
-    } while(send_at("+MQTTSTAT: 1\r\n",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若client参数未初始化
+    } while(send_at("+MQTTSTAT: 1\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若client参数未初始化
     cnt = 0;
     easyblink_stop(g_led9);
     eb_led_on(g_led9);
@@ -177,7 +177,7 @@ int MQTT_connect(void)
            rt_kprintf("mqtt open error for %d times!\n",cnt);
            return RT_ERROR;
        }
-    } while(send_at("+MQTTSTAT: 5",100,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若MQTT服务器未连接
+    } while(send_at("+MQTTSTAT: 5",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK);//若MQTT服务器未连接
     cnt = 0;
     easyblink_stop(g_led10);
     eb_led_on(g_led10);
@@ -234,7 +234,7 @@ int uart2_data_processing(char *buffer, rt_size_t index)
             uint16_t location=0;
 //           rt_kprintf("+MQTTPUBLISH: location = %d\n",location-(uint16_t)buffer);
             location = rt_strstr(buffer,urctopiccompare) - buffer;
-            if(location>0)
+            if(location>0 && index >= location + sizeof(urctopiccompare)-1)
             {
                 rt_kprintf("%s location = %d\n",urctopiccompare,location);
                 location += 19;
