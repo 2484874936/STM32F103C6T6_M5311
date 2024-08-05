@@ -234,7 +234,7 @@ int uart2_data_processing(char *buffer, rt_size_t index)
             uint16_t location=0;
 //           rt_kprintf("+MQTTPUBLISH: location = %d\n",location-(uint16_t)buffer);
             location = rt_strstr(buffer,urctopiccompare) - buffer;
-            if(location>0)
+            if(location>0 && index >= location + sizeof(urctopiccompare)-1)
             {
                 rt_kprintf("%s location = %d\n",urctopiccompare,location);
                 location += 19;
