@@ -28,7 +28,7 @@
 
 #if defined(USING_UART1)
 void uart1_baud_rate_set(void);
-
+struct rt_ringbuffer uart1_rb;
 static rt_size_t uart1_send(void *data, rt_size_t size);
 static rt_size_t uart1_recv(char *buffer, rt_int32_t timeout);
 static rt_err_t uart1_callback(rt_device_t dev, rt_size_t size);
@@ -47,6 +47,7 @@ uart_t G_UART_1 = {
         NULL,
 #endif
         uart1_callback,
+        uart1_rb,
         uart1_init,
         uart1_data_processing};
 
@@ -220,6 +221,7 @@ uart_t G_UART_2 = {
         NULL,
 #endif
         uart2_callback,
+        NULL,
         uart2_init,
         uart2_data_processing };
 
@@ -356,6 +358,9 @@ int uart2_init(void)
             return RT_ERROR;
         }
     }
+    //初始化ringbuf
+    G_UART_2.rb = rt_ringbuffer_create(256);
+    rt_ringbuffer_reset(G_UART_2.rb);
     /* 创建 serial 线程 */
     rt_thread_t thread = rt_thread_create("serial2", uart2_rev_thread, RT_NULL, 1024, 22, 10);
     /* 创建成功则启动线程 */
@@ -376,6 +381,7 @@ int uart2_init(void)
 
 #if defined(USING_UART3)
 
+struct rt_ringbuffer uart3_rb;
 static rt_size_t uart3_send(void *data, rt_size_t size);
 static rt_size_t uart3_recv(char *buffer, rt_int32_t timeout);
 static rt_err_t uart3_callback(rt_device_t dev, rt_size_t size);
@@ -394,6 +400,7 @@ uart_t G_UART_3 = {
         NULL,
 #endif
         uart3_callback,
+        uart3_rb,
         uart3_init,
         uart3_data_processing};
 

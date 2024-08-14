@@ -15,6 +15,7 @@ typedef struct Uart
     rt_size_t (*send)(void *, rt_size_t);
     rt_size_t (*recv)(char *, rt_int32_t);
     rt_err_t (*input)(rt_device_t, rt_size_t);
+    struct rt_ringbuffer *rb;
     int (*init)(void);
     int (*data_processing)(char *,rt_size_t);
 } uart_t;
