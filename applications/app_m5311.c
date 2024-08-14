@@ -298,7 +298,7 @@ int uart2_data_processing(char *buffer, rt_size_t index)
                          || onchip_led_buf[7] != buffer[location + 7] )
                         {
                             stm32_flash_erase (ON_CHIP_FAL_OFFSET_ADDR,sizeof(onchip_led_buf));
-                            stm32_flash_write(ON_CHIP_FAL_OFFSET_ADDR, onchip_led_buf, 8);
+                            stm32_flash_write(ON_CHIP_FAL_OFFSET_ADDR, buffer+location, 8);
                         }
     //                    g_rowled_data1_16.word32 = 0;
     //                    g_rowled_data17_18.word32 = 0;
