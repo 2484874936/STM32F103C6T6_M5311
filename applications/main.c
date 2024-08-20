@@ -50,7 +50,7 @@ int main(void)
         set_led();
     }
     m5311_moudle_init(REINIT_BLINK_LED);
-    int count=0;
+    int count=0,NT;
     for(;;)
     {
         if(send_at("STAT: 5\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
@@ -75,6 +75,15 @@ int main(void)
             count = 0;
         }
         set_led();
+        rt_thread_mdelay(900);
+        if(mqtt_heart() == RT_EOK)
+        {
+            rt_kprintf("***heart success***");
+        }
+        else
+        {
+            rt_kprintf("***heart error***");
+        }
         rt_thread_mdelay(900);
     }
     return RT_EOK;

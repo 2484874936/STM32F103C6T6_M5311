@@ -220,6 +220,14 @@ int MQTT_connect(_Bool init_flag)
     return RT_EOK;
 }
 
+
+
+int mqtt_heart(void)
+{
+    return send_at("HELLO_LED\r\n",1000,3,"AT+MQTTPUB=",IMEI,",1,0,0,0,HELLO_LED\r\n");
+}
+
+
 int uart2_data_processing(char *buffer, rt_size_t index)
 {
 #if defined(BSP_UART2_RX_USING_DMA)

@@ -70,4 +70,5 @@ struct M5311_Modle{
 int m5311_moudle_init(_Bool init_flag);
 int MQTT_connect(_Bool init_flag);
 rt_size_t send_at(char *ack, rt_uint32_t timeout, int num, ...);
+int mqtt_heart(void);
 #endif /* APPLICATIONS_APP_M5311_H_ */
