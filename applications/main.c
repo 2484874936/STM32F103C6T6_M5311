@@ -49,11 +49,10 @@ int main(void)
         g_rowled_data17_18.word32 = 0x0000000f;
         set_led();
     }
-    m5311_moudle_init(INIT_BLINK_LED);
+    m5311_moudle_init(REINIT_BLINK_LED);
     int count=0;
     for(;;)
     {
-
         if(send_at("STAT: 5\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
         {
             count++;

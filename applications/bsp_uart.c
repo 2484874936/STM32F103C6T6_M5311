@@ -282,16 +282,24 @@ static void uart2_rev_thread(void *parameter)
     char uart2rev[config.bufsz];
     memset(uart2rev,0,config.bufsz);
     rt_size_t len2=0;
-    char ch;
 
     for(;;)
     {
 #if defined(BSP_UART2_RX_USING_DMA)
         //DMA邮箱数据处理中心
-        len2 = G_UART_2.recv((char *)&uart2rev,RT_WAITING_FOREVER);
+        len2 = G_UART_2.recv(uart2rev,4);
         if(len2)
         {
-            len2 = G_UART_2.data_processing((char *)&uart2rev,len2);
+            rt_ringbuffer_put(G_UART_2.rb,(uint8_t *)uart2rev,len2);
+        }
+        else
+        {
+            len2 = rt_ringbuffer_data_len(G_UART_2.rb);
+            if(len2)
+            {
+                len2 = rt_ringbuffer_get(G_UART_2.rb,(uint8_t *)uart2rev,len2);
+                G_UART_2.data_processing(uart2rev,len2);
+            }
         }
 #else
         //中断数据处理中心
@@ -359,7 +367,7 @@ int uart2_init(void)
         }
     }
     //初始化ringbuf
-    G_UART_2.rb = rt_ringbuffer_create(256);
+    G_UART_2.rb = rt_ringbuffer_create(RT_SERIAL_RB_BUFSZ);
     rt_ringbuffer_reset(G_UART_2.rb);
     /* 创建 serial 线程 */
     rt_thread_t thread = rt_thread_create("serial2", uart2_rev_thread, RT_NULL, 1024, 22, 10);
