@@ -287,7 +287,7 @@ int uart2_data_processing(char *buffer, rt_size_t index)
                         g_rowled_data17_18.word32 = (rt_uint32_t)buffer[location+6];
                         rt_kprintf("Calibration success,g_rowled_data=0x%010X\n",g_rowled_data1_16.word32);
                         rt_uint8_t onchip_led_buf[8];
-                        stm32_flash_read(ON_CHIP_ADDR, &onchip_led_buf, 8);
+                        stm32_flash_read(ON_CHIP_FAL_OFFSET_ADDR, &onchip_led_buf, 8);
                         if(onchip_led_buf[0] != buffer[location + 0] \
                          || onchip_led_buf[1] != buffer[location + 1] \
                          || onchip_led_buf[2] != buffer[location + 2] \
@@ -297,8 +297,8 @@ int uart2_data_processing(char *buffer, rt_size_t index)
                          || onchip_led_buf[6] != buffer[location + 6] \
                          || onchip_led_buf[7] != buffer[location + 7] )
                         {
-                            stm32_flash_erase(ON_CHIP_ADDR,sizeof(onchip_led_buf));
-                            stm32_flash_write(ON_CHIP_ADDR, &buffer[location], 8);
+                            stm32_flash_erase(ON_CHIP_FAL_OFFSET_ADDR,sizeof(onchip_led_buf));
+                            stm32_flash_write(ON_CHIP_FAL_OFFSET_ADDR, &buffer[location], 8);
                         }
     //                    g_rowled_data1_16.word32 = 0;
     //                    g_rowled_data17_18.word32 = 0;

@@ -24,7 +24,6 @@ int main(void)
     led_init();
     rt_uint8_t onchip_led_buf[8];
     stm32_flash_read(ON_CHIP_FAL_OFFSET_ADDR, onchip_led_buf, 8);
-    while(1);
     if(onchip_led_buf[0] == 0xAA && onchip_led_buf[1] == 0x55)
    {
         uint8_t Calibration=0;
