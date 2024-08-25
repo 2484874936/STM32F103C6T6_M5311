@@ -11,9 +11,9 @@
 #include <board.h>
 #include <drv_common.h>
 #include "bsp_uart.h"
-
-
-#define ON_CHIP_ADDR 0x08000000+63*1024
+#include "drv_flash.h"
+//#include "on_chip_flash.h"
+#define ON_CHIP_FAL_OFFSET_ADDR 0x08000000+63*1024
 
 
 #define AT_SEND_BUF 512//AT指令最大长度
