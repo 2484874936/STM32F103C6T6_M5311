@@ -10,9 +10,9 @@
 
 #include <rtthread.h>
 
-//#define DBG_TAG "main"
-//#define DBG_LVL DBG_LOG
-//#include <rtdbg.h>
+#define DBG_TAG "main"
+#define DBG_LVL DBG_LOG
+#include <rtdbg.h>
 #include <myled.h>
 #include "bsp_uart.h"
 #include "app_m5311.h"

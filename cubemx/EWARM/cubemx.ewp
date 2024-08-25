@@ -1057,53 +1057,23 @@
     </group>
     <group>
       <name>User</name>
-      <group>
-        <name>D:</name>
-        <group>
-          <name>workplace_RT</name>
-          <group>
-            <name>zsp-001</name>
-            <group>
-              <name>cubemx</name>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/main.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/gpio.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/dma.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/usart.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_it.c</name>
-              </file>
-              <file>
-                <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_hal_msp.c</name>
-              </file>
-            </group>
-          </group>
-        </group>
-      </group>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/main.c</name>
+        <name>$PROJ_DIR$/../Src/main.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/gpio.c</name>
+        <name>$PROJ_DIR$/../Src/gpio.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/dma.c</name>
+        <name>$PROJ_DIR$/../Src/dma.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/usart.c</name>
+        <name>$PROJ_DIR$/../Src/usart.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_it.c</name>
+        <name>$PROJ_DIR$/../Src/stm32f1xx_it.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$/../D:/workplace_RT/zsp-001/cubemx/Src/stm32f1xx_hal_msp.c</name>
+        <name>$PROJ_DIR$/../Src/stm32f1xx_hal_msp.c</name>
       </file>
     </group>
   </group>
