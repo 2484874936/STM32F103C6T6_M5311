@@ -214,9 +214,12 @@ int MQTT_connect(_Bool init_flag)
         eb_led_on(g_led10);
     }
     send_at("OK\r\n",100,3,"AT+MQTTSUB=",IMEI,",1\r\n");
-    g_rowled_data1_16.word32 = 0xffffffff;
-    g_rowled_data17_18.word32 = 0x0000000f;
-    set_led();
+    if(init_flag)
+    {
+        g_rowled_data1_16.word32 = 0xffffffff;
+        g_rowled_data17_18.word32 = 0x0000000f;
+        set_led();
+    }
     return RT_EOK;
 }
 
@@ -224,7 +227,7 @@ int MQTT_connect(_Bool init_flag)
 
 int mqtt_heart(void)
 {
-    return send_at("HELLO_LED\r\n",1000,3,"AT+MQTTPUB=",IMEI,",1,0,0,0,HELLO_LED\r\n");
+    return send_at("HELLO_LED\r\n",2000,3,"AT+MQTTPUB=",IMEI,",1,0,0,0,HELLO_LED\r\n");
 }
 
 
@@ -310,6 +313,7 @@ int uart2_data_processing(char *buffer, rt_size_t index)
                         }
     //                    g_rowled_data1_16.word32 = 0;
     //                    g_rowled_data17_18.word32 = 0;
+                        set_led();
                     }
                 }
             }

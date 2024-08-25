@@ -47,44 +47,52 @@ int main(void)
     {
         g_rowled_data1_16.word32 = 0xffffffff;
         g_rowled_data17_18.word32 = 0x0000000f;
-        set_led();
     }
+    set_led();
     m5311_moudle_init(REINIT_BLINK_LED);
-    int count=0,NT;
+    int count=0;
     for(;;)
     {
-        if(send_at("STAT: 5\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
-        {
-            count++;
-            if(count == 3)
-            {
-                count = 0;
-                rt_kprintf("MQTT RECONNECTING...\n");
-                if(m5311_moudle_init(REINIT_BLINK_LED) != RT_EOK)
-                {
-                    rt_kprintf("MQTT RECONNECT ERROR\n");
-                }
-                else
-                {
-                    rt_kprintf("MQTT RECONNECT SUCCESS\n");
-                }
-            }
-        }
-        else
-        {
-            count = 0;
-        }
-        set_led();
-        rt_thread_mdelay(900);
+//        if(send_at("STAT: 5\r\n",1000,1,"AT+MQTTSTAT?\r\n") != RT_EOK)
+//        {
+//            count++;
+//            if(count == 3)
+//            {
+//                count = 0;
+//                rt_kprintf("MQTT RECONNECTING...\n");
+//                if(m5311_moudle_init(REINIT_BLINK_LED) != RT_EOK)
+//                {
+//                    rt_kprintf("MQTT RECONNECT ERROR\n");
+//                }
+//                else
+//                {
+//                    rt_kprintf("MQTT RECONNECT SUCCESS\n");
+//                }
+//            }
+//        }
+//        else
+//        {
+//            count = 0;
+//        }
+//        set_led();
         if(mqtt_heart() == RT_EOK)
         {
-            rt_kprintf("***heart success***");
+            rt_kprintf("***heart success***\n");
         }
         else
         {
-            rt_kprintf("***heart error***");
+            rt_kprintf("***heart error***\n");
+            rt_kprintf("MQTT RECONNECTING...\n");
+            if(m5311_moudle_init(REINIT_BLINK_LED) != RT_EOK)
+            {
+                rt_kprintf("MQTT RECONNECT ERROR\n");
+            }
+            else
+            {
+                rt_kprintf("MQTT RECONNECT SUCCESS\n");
+            }
         }
-        rt_thread_mdelay(900);
+        rt_thread_mdelay(2000);
     }
     return RT_EOK;
 }
