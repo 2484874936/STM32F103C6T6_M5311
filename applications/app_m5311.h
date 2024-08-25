@@ -13,7 +13,7 @@
 #include "bsp_uart.h"
 
 
-
+#define ON_CHIP_ADDR 0x08000000+63*1024
 
 
 #define AT_SEND_BUF 512//AT指令最大长度

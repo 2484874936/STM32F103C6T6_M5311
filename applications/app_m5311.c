@@ -270,22 +270,39 @@ int uart2_data_processing(char *buffer, rt_size_t index)
             {
                 rt_kprintf("%s location = %d\n",urctopiccompare,location);
                 location += 19;
-                for(uint8_t i = location; i < location+7; i ++)
+                if(buffer[location+0] == 0xAA && buffer[location+1] == 0x55)
                 {
-                    rt_kprintf("buffer[%d] = 0x%02x\n",i,buffer[i]);
-                    Calibration ^= buffer[i];
-                }
-                rt_kprintf("buffer[%d] = 0x%02x\n",location+7,buffer[location+7]);
-                if(Calibration == buffer[location+7])
-                {
-                    g_rowled_data1_16.word32 = (rt_uint32_t)buffer[location+2] \
-                                             | (rt_uint32_t)buffer[location+3] << 8 \
-                                             | (rt_uint32_t)buffer[location+4] << 16 \
-                                             | (rt_uint32_t)buffer[location+5] << 24;
-                    g_rowled_data17_18.word32 = (rt_uint32_t)buffer[location+6];
-                    rt_kprintf("Calibration success,g_rowled_data=0x%010X\n",g_rowled_data1_16.word32);
-//                    g_rowled_data1_16.word32 = 0;
-//                    g_rowled_data17_18.word32 = 0;
+                    for(uint8_t i = location; i < location+7; i ++)
+                    {
+                        rt_kprintf("buffer[%d] = 0x%02x\n",i,buffer[i]);
+                        Calibration ^= buffer[i];
+                    }
+                    rt_kprintf("buffer[%d] = 0x%02x\n",location+7,buffer[location+7]);
+                    if(Calibration == buffer[location+7])
+                    {
+                        g_rowled_data1_16.word32 = (rt_uint32_t)buffer[location+2] \
+                                                 | (rt_uint32_t)buffer[location+3] << 8 \
+                                                 | (rt_uint32_t)buffer[location+4] << 16 \
+                                                 | (rt_uint32_t)buffer[location+5] << 24;
+                        g_rowled_data17_18.word32 = (rt_uint32_t)buffer[location+6];
+                        rt_kprintf("Calibration success,g_rowled_data=0x%010X\n",g_rowled_data1_16.word32);
+                        rt_uint8_t onchip_led_buf[8];
+                        stm32_flash_read(ON_CHIP_ADDR, &onchip_led_buf, 8);
+                        if(onchip_led_buf[0] != buffer[location + 0] \
+                         || onchip_led_buf[1] != buffer[location + 1] \
+                         || onchip_led_buf[2] != buffer[location + 2] \
+                         || onchip_led_buf[3] != buffer[location + 3] \
+                         || onchip_led_buf[4] != buffer[location + 4] \
+                         || onchip_led_buf[5] != buffer[location + 5] \
+                         || onchip_led_buf[6] != buffer[location + 6] \
+                         || onchip_led_buf[7] != buffer[location + 7] )
+                        {
+                            stm32_flash_erase(ON_CHIP_ADDR,sizeof(onchip_led_buf));
+                            stm32_flash_write(ON_CHIP_ADDR, &onchip_led_buf, 8);
+                        }
+    //                    g_rowled_data1_16.word32 = 0;
+    //                    g_rowled_data17_18.word32 = 0;
+                    }
                 }
             }
         }
