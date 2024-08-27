@@ -156,8 +156,10 @@ int MQTT_connect(_Bool init_flag)
     //    m5311_modle.clean= "1";
     m5311_modle.mqtt_host = "\"jinchanhb.com\"";//正式服务器
     m5311_modle.mqtt_port = "19003";
+/*   test url: http://jinchanhb.com:8500/test/test_light?topic=866469057983066&str=0100000100110000000000000000011000000000*/
 //    m5311_modle.mqtt_host = "\"zz.zcczcc.com\"";//测试服务器
 //    m5311_modle.mqtt_port = "9004";
+/*   test url: http://zz.zcczcc.com:9531/test/test_light?topic=866469057983066&str=0100000000000000000000000000000000000000*/
     m5311_modle.mqtt_clientid = IMEI;
     m5311_modle.keepalive = "120";
     m5311_modle.user = "\"\"";
