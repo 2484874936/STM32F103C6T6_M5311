@@ -77,13 +77,21 @@ int main(void)
 //            count = 0;
 //        }
 //        set_led();
+        static heart_error_cnt = 0;
+
         if(mqtt_heart() == RT_EOK)
         {
             rt_kprintf("***heart success***\n");
+            heart_error_cnt = 0;
         }
         else
         {
+            heart_error_cnt ++;
             rt_kprintf("***heart error***\n");
+        }
+        if(heart_error_cnt>3)
+        {
+            heart_error_cnt = 0;
             rt_kprintf("MQTT RECONNECTING...\n");
             if(m5311_moudle_init(REINIT_BLINK_LED) != RT_EOK)
             {
